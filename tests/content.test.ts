@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { ZodTypeAny } from 'zod';
+import type { ZodType } from 'zod';
 import {
   AnnotatedSentenceSchema,
   NounSchema,
@@ -36,7 +36,7 @@ function load(dir: string): Entry[] {
     });
 }
 
-const collections: Array<[string, ZodTypeAny]> = [
+const collections: Array<[string, ZodType]> = [
   ['nouns', NounSchema],
   ['quizzes', QuizQuestionSchema],
   ['sentences', AnnotatedSentenceSchema],
