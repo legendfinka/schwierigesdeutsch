@@ -29,7 +29,7 @@ body {
   font-weight: 700;
 }
 
-/* Dev only: unverified content never reaches a production build. */
+/* Marks content or parts of it that no source has confirmed yet. */
 .badge-unreviewed {
   border: 1px dashed currentColor;
   border-radius: 0.25rem;
@@ -40,3 +40,4 @@ body {
 .gender-m { color: var(--gender-m); }
 .gender-f { color: var(--gender-f); }
 .gender-n { color: var(--gender-n); }
+.gender-pl { color: var(--gender-pl); }

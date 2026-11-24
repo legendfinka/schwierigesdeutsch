@@ -1,7 +1,9 @@
 import { z } from 'zod';
+import { exampleUsesNoun } from './german-text';
 
 export const LEVELS = ['A1', 'A2', 'B1', 'B2'] as const;
-export const GENDERS = ['m', 'f', 'n'] as const;
+/** m/f/n for singular nouns; pl only for plural-only nouns (die Leute). */
+export const GENDERS = ['m', 'f', 'n', 'pl'] as const;
 export const CASES = ['nom', 'acc', 'dat', 'gen'] as const;
 export const ROLES = [
   'verb1',
@@ -37,6 +39,20 @@ export const SOURCES = [
   'native-speaker',
 ] as const;
 
+/**
+ * What a verification covered. Content may only be presented as verified for the
+ * parts listed here (see visibility.ts for what production requires).
+ */
+export const CHECKABLE = [
+  'gender',
+  'plural',
+  'translation',
+  'example',
+  'answer',
+  'explanation',
+  'roles',
+] as const;
+
 const isRealDate = (s: string) => {
   const d = new Date(`${s}T00:00:00Z`);
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
@@ -49,6 +65,7 @@ const isRealDate = (s: string) => {
 export const Verified = z
   .object({
     sources: z.array(z.enum(SOURCES)).min(1),
+    checked: z.array(z.enum(CHECKABLE)).min(1),
     date: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'date must be YYYY-MM-DD')
@@ -59,6 +76,9 @@ export const Verified = z
   .superRefine((v, ctx) => {
     if (new Set(v.sources).size !== v.sources.length) {
       ctx.addIssue({ code: 'custom', path: ['sources'], message: 'sources must be unique' });
+    }
+    if (new Set(v.checked).size !== v.checked.length) {
+      ctx.addIssue({ code: 'custom', path: ['checked'], message: 'checked must be unique' });
     }
     if (v.sources.length < 2 && !v.sources.includes('native-speaker')) {
       ctx.addIssue({
@@ -77,7 +97,10 @@ export const NounSchema = z
     noun: z.string().min(1),
     gender: Gender,
     plural: z.string().min(1).nullable(),
+    /** Only exists in the plural (die Leute): gender "pl", plural equals the noun. */
     pluralOnly: z.boolean().optional(),
+    /** Has no plural (das Wasser, die Milch): plural must be null. */
+    singularOnly: z.boolean().optional(),
     level: Level,
     translation: LocalizedText,
     example: z.string().min(1),
@@ -86,15 +109,27 @@ export const NounSchema = z
   })
   .strict()
   .superRefine((n, ctx) => {
-    if (n.pluralOnly && n.plural === null) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['plural'],
-        message: 'pluralOnly nouns must have a plural form',
-      });
+    const issue = (path: string, message: string) =>
+      ctx.addIssue({ code: 'custom', path: [path], message });
+
+    if (n.pluralOnly && n.singularOnly) {
+      issue('singularOnly', 'a noun cannot be both pluralOnly and singularOnly');
     }
-    const forms = [n.noun, n.plural].filter((f): f is string => f !== null);
-    if (!forms.some((f) => n.example.includes(f))) {
+    if (n.pluralOnly) {
+      if (n.gender !== 'pl') issue('gender', 'pluralOnly nouns have gender "pl"');
+      if (n.plural !== n.noun) issue('plural', 'pluralOnly nouns: plural must equal the noun');
+    } else if (n.gender === 'pl') {
+      issue('gender', 'gender "pl" is only for pluralOnly nouns');
+    }
+    if (n.singularOnly && n.plural !== null) {
+      issue('plural', 'singularOnly nouns must have "plural": null');
+    }
+    if (n.plural === null && !n.singularOnly) {
+      issue('singularOnly', '"plural": null requires "singularOnly": true');
+    }
+    // Whole words only; genitive -s/-es and dative plural -n only after the right
+    // determiner (see german-text.ts). "Ei" must not match "Ich esse Eis."
+    if (!exampleUsesNoun(n.example, n.noun, n.plural)) {
       ctx.addIssue({
         code: 'custom',
         path: ['example'],
@@ -153,7 +188,7 @@ export const SentencePartSchema = z
 
 const stripPunctuation = (s: string) =>
   s
-    .replace(/[.,!?;:„“"]/g, '')
+    .replace(/[.,!?;:…–—„“”"‚‘’'»«()]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -174,6 +209,13 @@ export const AnnotatedSentenceSchema = z
           code: 'custom',
           path: ['parts', i, 'case'],
           message: `${p.role} needs a case`,
+        });
+      }
+      if (p.role === 'subject' && p.case && p.case !== 'nom') {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['parts', i, 'case'],
+          message: 'a subject is always nominative',
         });
       }
     });
