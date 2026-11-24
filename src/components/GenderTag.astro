@@ -1,0 +1,42 @@
+---
+/**
+ * The article of a noun in its gender color. Never color alone: the article text is
+ * always shown, plural gets an extra "Pl." (die is also feminine), and screen readers
+ * hear the gender name.
+ */
+import { ARTICLE, GENDER_LABEL, type Gender } from '../lib/gender';
+
+interface Props {
+  gender: Gender;
+}
+
+const { gender } = Astro.props;
+---
+
+<span class={`gender-tag gender-${gender}`}>
+  <span lang="de">{ARTICLE[gender]}</span>
+  {gender === 'pl' && <abbr class="gender-tag__pl" title="plural" aria-hidden="true">Pl.</abbr>}
+  <span class="visually-hidden">({GENDER_LABEL[gender]})</span>
+</span>
+
+<style>
+  .gender-tag {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.2em;
+    font-weight: 700;
+    border: 1.5px solid currentColor;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    padding: 0 0.4em;
+    line-height: 1.5;
+    min-width: 2.6em;
+    justify-content: center;
+  }
+
+  .gender-tag__pl {
+    font-size: 0.7em;
+    font-weight: 600;
+    text-decoration: none;
+  }
+</style>

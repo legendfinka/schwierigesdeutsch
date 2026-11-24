@@ -1,43 +1,136 @@
 ---
 import { getCollection } from 'astro:content';
-import '../styles/global.css';
-import { REQUIRED_CHECKS, isChecked, isVerified, isVisible } from '../lib/visibility';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import GenderTag from '../components/GenderTag.astro';
+import Logo from '../components/Logo.astro';
+import { GENDER_LABEL, type Gender } from '../lib/gender';
+import { url } from '../lib/url';
+import { REQUIRED_CHECKS, isVisible } from '../lib/visibility';
 
-const articles = { m: 'der', f: 'die', n: 'das', pl: 'die' } as const;
-const nouns = (
+const nounCount = (
   await getCollection('nouns', ({ data }) =>
     isVisible(data, import.meta.env.DEV, REQUIRED_CHECKS.noun),
   )
-).sort((a, b) => a.data.noun.localeCompare(b.data.noun, 'de'));
+).length;
 
-const pluralNote = (n: (typeof nouns)[number]['data']) =>
-  n.pluralOnly ? '(only plural)' : n.plural ? `(Pl. die ${n.plural})` : '(no plural)';
+const genders: Gender[] = ['m', 'f', 'n', 'pl'];
+
+const sections = [
+  {
+    title: 'Nouns',
+    href: url('/nouns/'),
+    text: `${nounCount} everyday A1 nouns with their article and plural.`,
+  },
+  { title: 'Cases', text: 'Nominative, accusative, dative, genitive: why the article changes.' },
+  { title: 'Sentences', text: 'Tap a sentence to see the verb, the subject and the objects.' },
+  { title: 'Stories', text: 'Short A1–A2 stories to read and listen to.' },
+  { title: 'Grammar', text: 'Short rule pages in plain English.' },
+];
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SchwierigeDeutsch</title>
-  </head>
-  <body>
-    <h1>SchwierigeDeutsch</h1>
-    <p>Sample A1 nouns (placeholder page).</p>
-    <ul class="noun-list">
+<BaseLayout>
+  <section class="hero">
+    <div class="hero__title">
+      <Logo size={64} class="hero__logo" />
+      <h1>See how German is built</h1>
+    </div>
+    <p class="lead">
+      You can read every word and still not know who does what. This site shows you the
+      structure: the article, the case, the verb, the subject.
+    </p>
+  </section>
+
+  <section aria-labelledby="colors">
+    <h2 id="colors">The colors</h2>
+    <p>Every noun shows its article in a color. The article is always written too.</p>
+    <ul class="legend">
       {
-        nouns.map(({ data: n }) => (
+        genders.map((g) => (
           <li>
-            <span class={`article gender-${n.gender}`}>{articles[n.gender]}</span>
-            <span lang="de">{n.noun}</span>
-            <span lang="de">{pluralNote(n)}</span>
-            <span>– {n.translation.en}</span>
-            {!isVerified(n) && <span class="badge-unreviewed">unreviewed</span>}
-            {isVerified(n) && !isChecked(n, 'translation') && (
-              <span class="badge-unreviewed">translation unchecked</span>
+            <GenderTag gender={g} /> <span aria-hidden="true">{GENDER_LABEL[g]}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section aria-labelledby="start">
+    <h2 id="start">Start here</h2>
+    <ul class="card-grid">
+      {
+        sections.map((s) => (
+          <li>
+            {s.href ? (
+              <a class="card section-card" href={s.href}>
+                <h3>{s.title}</h3>
+                <p class="muted">{s.text}</p>
+              </a>
+            ) : (
+              <div class="card section-card section-card--soon">
+                <h3>
+                  {s.title} <span class="badge">coming soon</span>
+                </h3>
+                <p class="muted">{s.text}</p>
+              </div>
             )}
           </li>
         ))
       }
     </ul>
-  </body>
-</html>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    padding: var(--space-4) 0 var(--space-3);
+  }
+
+  .hero__title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-3);
+  }
+
+  .hero__title h1 {
+    margin: 0;
+  }
+
+  /* Sits on the page background, so give the tile a soft lift */
+  .hero :global(.hero__logo) {
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  section + section {
+    margin-top: var(--space-6);
+  }
+
+  .legend {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-5);
+  }
+
+  .legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .section-card {
+    height: 100%;
+  }
+
+  .section-card p {
+    margin: 0;
+  }
+
+  .section-card--soon {
+    background: var(--surface-sunk);
+    box-shadow: none;
+  }
+</style>

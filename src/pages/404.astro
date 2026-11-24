@@ -1,0 +1,10 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { url } from '../lib/url';
+---
+
+<BaseLayout title="Page not found">
+  <h1>Page not found</h1>
+  <p class="lead">This page doesn't exist (yet). Some sections are still being written.</p>
+  <p><a href={url('/')}>Back to the start page</a></p>
+</BaseLayout>

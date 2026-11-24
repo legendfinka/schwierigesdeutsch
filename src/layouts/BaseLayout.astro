@@ -1,0 +1,210 @@
+---
+import '../styles/global.css';
+import { url } from '../lib/url';
+import Logo from '../components/Logo.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title,
+  description = 'A free, simple site for learning how German sentences are built.',
+} = Astro.props;
+
+const SITE_NAME = 'Schwieriges Deutsch';
+const fullTitle = title ? `${title} · ${SITE_NAME}` : SITE_NAME;
+
+// Only pages that exist. Upcoming sections are listed on the home page instead.
+const nav = [
+  { href: url('/'), label: 'Home' },
+  { href: url('/nouns/'), label: 'Nouns' },
+];
+
+const here = Astro.url.pathname;
+const isCurrent = (href: string) =>
+  href === here || (href !== url('/') && here.startsWith(href));
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#fbf5ea" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#221a14" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
+    <title>{fullTitle}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="brand" href={url('/')} aria-label={`${SITE_NAME}, start page`}>
+          <Logo size={40} />
+          <span class="brand__text">
+            <span class="brand__name" lang="de">
+              Schwieriges <span class="brand__accent">Deutsch</span>
+            </span>
+            <span class="brand__stripe" aria-hidden="true"></span>
+            <span class="brand__tagline">German structure, made visible</span>
+          </span>
+        </a>
+        <nav aria-label="Main">
+          <ul class="nav">
+            {
+              nav.map((item) => (
+                <li>
+                  <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+                    {item.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main" class="page">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <p>Free to use. No accounts, no ads, no tracking.</p>
+    </footer>
+  </body>
+</html>
+
+<style>
+  .skip-link {
+    position: absolute;
+    left: var(--space-3);
+    top: -4rem;
+    background: var(--surface);
+    color: var(--text);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    z-index: 10;
+  }
+
+  .skip-link:focus {
+    top: var(--space-3);
+  }
+
+  .site-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    border-top: 4px solid var(--accent);
+  }
+
+  .site-header__inner {
+    max-width: var(--measure);
+    margin: 0 auto;
+    padding: var(--space-2) var(--space-4);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--tap);
+    padding: var(--space-1) 0;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .brand__text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+  }
+
+  .brand__name {
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .brand__accent {
+    color: var(--accent);
+  }
+
+  /* der / die / das: a quiet nod to what the site teaches */
+  .brand__stripe {
+    width: 4.5rem;
+    height: 3px;
+    margin: 0.3rem 0 0.25rem;
+    border-radius: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--gender-m) 0 33.3%,
+      var(--gender-f) 33.3% 66.6%,
+      var(--gender-n) 66.6% 100%
+    );
+  }
+
+  .brand__tagline {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 22rem) {
+    .brand__tagline {
+      display: none;
+    }
+  }
+
+  .nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+
+  .nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .nav a:hover {
+    color: var(--text);
+    background: var(--surface-sunk);
+  }
+
+  .nav a[aria-current='page'] {
+    color: var(--text);
+    background: var(--accent-soft);
+  }
+
+  .site-footer {
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-align: center;
+    padding: var(--space-4);
+  }
+
+  .site-footer p {
+    margin: 0;
+  }
+</style>

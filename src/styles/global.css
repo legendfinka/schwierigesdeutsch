@@ -1,41 +1,224 @@
+/*
+ * Design tokens + base styles. Warm, autumn-like, cozy: paper background, brown ink,
+ * caramel/rust accents, muted autumn gender colors. Every text color here is tested
+ * for WCAG AA contrast in both themes (tests/design-tokens.test.ts): only use #rrggbb
+ * values for color tokens so the test can read them.
+ */
+
 :root {
-  --gender-m: #1d5fbf;
-  --gender-f: #c0262d;
-  --gender-n: #2a7d3f;
-  --gender-pl: #6b5b95;
+  color-scheme: light dark;
+
+  /* Light theme: paper and brown ink */
+  --bg: #fbf5ea;
+  --surface: #fffaf2;
+  --surface-sunk: #f3e8d6;
+  --text: #3b2a1e;
+  --text-muted: #6e5644;
+  --border: #e4d3ba;
+  --accent: #8a5a12;
+  --accent-soft: #f1dcb8;
+  --focus: #b4541f;
+
+  /* Gender colors: same meaning everywhere, always shown with the article text */
+  --gender-m: #3a5a8c; /* dusk blue */
+  --gender-f: #a63a2e; /* brick red */
+  --gender-n: #4a6b2a; /* moss green */
+  --gender-pl: #6e4a7e; /* plum */
+
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --font-heading: ui-serif, 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+
+  --radius: 0.75rem;
+  --radius-sm: 0.4rem;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2.5rem;
+  --measure: 42rem;
+  --tap: 44px;
+  --shadow: 0 1px 2px rgb(59 42 30 / 0.06), 0 6px 16px rgb(59 42 30 / 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Dark theme: warm charcoal-brown, cream text */
+    --bg: #221a14;
+    --surface: #2d231b;
+    --surface-sunk: #1b140f;
+    --text: #f1e6d4;
+    --text-muted: #c4b39c;
+    --border: #4a3a2c;
+    --accent: #e0a458;
+    --accent-soft: #4a3519;
+    --focus: #e58a4e;
+
+    --gender-m: #8fb0de;
+    --gender-f: #e58a7a;
+    --gender-n: #a9c27a;
+    --gender-pl: #c9a3d9;
+
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 16px rgb(0 0 0 / 0.25);
+  }
+}
+
+/* ------------------------------------------------------------------ base */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
-  font-family: system-ui, sans-serif;
-  line-height: 1.5;
-  margin: 0 auto;
-  max-width: 40rem;
-  padding: 1rem;
-}
-
-.noun-list {
-  list-style: none;
-  padding: 0;
-}
-
-.noun-list li {
-  align-items: center;
+  margin: 0;
+  min-height: 100vh;
   display: flex;
-  gap: 0.5rem;
-  min-height: 44px;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.6;
 }
 
-.article {
-  font-weight: 700;
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 0 0 var(--space-3);
 }
 
-/* Marks content or parts of it that no source has confirmed yet. */
-.badge-unreviewed {
-  border: 1px dashed currentColor;
-  border-radius: 0.25rem;
+h1 { font-size: clamp(1.75rem, 5vw, 2.4rem); }
+h2 { font-size: 1.45rem; }
+h3 { font-size: 1.15rem; }
+
+p {
+  margin: 0 0 var(--space-4);
+}
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a,
+  .card {
+    transition: color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+}
+
+/* --------------------------------------------------------------- helpers */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.page {
+  flex: 1;
+  width: 100%;
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) var(--space-6);
+}
+
+.lead {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------------- cards */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-4);
+}
+
+.card-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+}
+
+a.card {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  min-height: var(--tap);
+}
+
+a.card:hover {
+  border-color: var(--accent);
+}
+
+/* --------------------------------------------------------------- badges */
+
+.badge {
+  display: inline-block;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-sunk);
+  color: var(--text-muted);
   font-size: 0.75rem;
-  padding: 0 0.35rem;
+  line-height: 1.4;
+  padding: 0.05rem 0.55rem;
+  vertical-align: middle;
 }
+
+/* Content (or a part of it) that no source has confirmed yet */
+.badge--unverified {
+  border-style: dashed;
+}
+
+/* A single part of an entry (e.g. a translation) that no source has confirmed yet.
+   Quiet on purpose; always pair with a legend and screen-reader text. */
+.unverified {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--text-muted);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.25em;
+}
+
+/* ------------------------------------------------------------- genders */
 
 .gender-m { color: var(--gender-m); }
 .gender-f { color: var(--gender-f); }
