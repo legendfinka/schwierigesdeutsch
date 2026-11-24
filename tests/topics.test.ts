@@ -6,8 +6,11 @@ describe('topics', () => {
     expect(new Set(TOPIC_IDS).size).toBe(TOPICS.length);
     expect(new Set(TOPICS.map((t) => t.label)).size).toBe(TOPICS.length);
   });
-  it('ids are safe for #anchors', () => {
+  it('ids are safe for #anchors and urls', () => {
     for (const id of TOPIC_IDS) expect(id).toMatch(/^[a-z][a-z0-9-]*$/);
+  });
+  it('no topic page clashes with /nouns/practice/', () => {
+    expect(TOPIC_IDS).not.toContain('practice');
   });
 });
 

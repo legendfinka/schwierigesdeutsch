@@ -9,7 +9,7 @@ type WatchHandler = (event: string, changed: string) => void;
 // One handler per folder, so reloads don't stack listeners.
 const handlers = new Map<string, WatchHandler>();
 
-// Loads all .json files in a folder. A file holds one entry or a list.
+// Loads all .json files in a folder and its subfolders. A file holds one entry or a list.
 export function jsonDir(dir: string): Loader {
   return {
     name: 'json-dir',
@@ -19,7 +19,9 @@ export function jsonDir(dir: string): Loader {
       const doSync = async () => {
         const files: RawFile[] = [];
         if (existsSync(base)) {
-          for (const file of (await readdir(base)).filter((f) => f.endsWith('.json')).sort()) {
+          // Subfolders count too, e.g. nouns/a1/food.json.
+          const names = await readdir(base, { recursive: true });
+          for (const file of names.filter((f) => f.endsWith('.json')).sort()) {
             const text = await readFile(join(base, file), 'utf8');
             try {
               files.push({ file, raw: JSON.parse(text) });

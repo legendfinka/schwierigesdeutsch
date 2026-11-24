@@ -4,6 +4,13 @@ export const TOPICS = [
   { id: 'food', label: 'Food & drink' },
   { id: 'home', label: 'Home' },
   { id: 'town', label: 'Town & travel' },
+  { id: 'work', label: 'Work' },
+  { id: 'school', label: 'School & study' },
+  { id: 'body', label: 'Body & health' },
+  { id: 'clothes', label: 'Clothes' },
+  { id: 'nature', label: 'Nature & animals' },
+  { id: 'freetime', label: 'Free time' },
+  { id: 'society', label: 'Society & media' },
   { id: 'time', label: 'Time' },
   { id: 'everyday', label: 'Everyday things' },
 ] as const;

@@ -27,7 +27,7 @@ type Entry = { file: string; data: Record<string, unknown> };
 function load(dir: string): Entry[] {
   const path = join(CONTENT, dir);
   if (!existsSync(path)) return [];
-  return readdirSync(path)
+  return readdirSync(path, { recursive: true, encoding: 'utf8' })
     .filter((f) => f.endsWith('.json'))
     .flatMap((file) => {
       const parsed: unknown = JSON.parse(readFileSync(join(path, file), 'utf8'));
@@ -118,6 +118,16 @@ describe('content/nouns extras', () => {
     const bad = nouns.flatMap(({ file, item }) =>
       checkNounId(item).map((p) => `${file}: ${p}`),
     );
+    expect(bad).toEqual([]);
+  });
+
+  it('a noun in a level folder (nouns/a1/…) has that level', () => {
+    const bad = nouns.flatMap(({ file, item }) => {
+      const folder = file.split(/[\\/]/)[0] ?? '';
+      return file.includes('/') && folder !== item.level.toLowerCase()
+        ? [`${file} [${item.id}]: level ${item.level} is in folder ${folder}`]
+        : [];
+    });
     expect(bad).toEqual([]);
   });
 
