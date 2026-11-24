@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { exampleUsesNoun } from './german-text';
+import { TOPIC_IDS } from './topics';
 
 export const LEVELS = ['A1', 'A2', 'B1', 'B2'] as const;
 /** m/f/n for singular nouns; pl only for plural-only nouns (die Leute). */
@@ -102,6 +103,8 @@ export const NounSchema = z
     /** Has no plural (das Wasser, die Milch): plural must be null. */
     singularOnly: z.boolean().optional(),
     level: Level,
+    /** Groups nouns on the site; ids and labels live in topics.ts. */
+    topic: z.enum(TOPIC_IDS),
     translation: LocalizedText,
     example: z.string().min(1),
     genderRule: z.string().min(1).nullable(),

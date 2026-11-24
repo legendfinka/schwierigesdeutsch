@@ -77,6 +77,7 @@ describe('plural-only and singular-only nouns', () => {
     plural: 'Leute',
     pluralOnly: true,
     level: 'A1',
+    topic: 'people',
     translation: { en: 'people' },
     example: 'Die Leute warten auf den Bus.',
     genderRule: null,
@@ -88,6 +89,7 @@ describe('plural-only and singular-only nouns', () => {
     plural: null,
     singularOnly: true,
     level: 'A1',
+    topic: 'food',
     translation: { en: 'milk' },
     example: 'Die Milch ist kalt.',
     genderRule: null,
@@ -126,6 +128,11 @@ describe('old fields', () => {
     // Strict schemas catch typos and fields from the old format.
     expect(NounSchema.safeParse({ ...nounFixture(), needsReview: false }).success).toBe(false);
   });
+  it('requires a known topic', () => {
+    const { topic: _omit, ...without } = nounFixture();
+    expect(NounSchema.safeParse(without).success).toBe(false);
+    expect(NounSchema.safeParse({ ...nounFixture(), topic: 'animals' }).success).toBe(false);
+  });
 });
 
 function nounFixture() {
@@ -135,6 +142,7 @@ function nounFixture() {
     gender: 'n',
     plural: 'Kinder',
     level: 'A1',
+    topic: 'people',
     translation: { en: 'child' },
     example: 'Das Kind spielt.',
     genderRule: null,
@@ -147,6 +155,7 @@ const noun = {
   gender: 'm',
   plural: 'Tische',
   level: 'A1',
+  topic: 'home',
   translation: { en: 'table' },
   example: 'Der Tisch steht in der Küche.',
   genderRule: null,

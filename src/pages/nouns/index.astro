@@ -1,0 +1,152 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import GenderTag from '../../components/GenderTag.astro';
+import { pluralText } from '../../lib/gender';
+import { groupByTopic } from '../../lib/topics';
+import { REQUIRED_CHECKS, isChecked, isVerified, isVisible } from '../../lib/visibility';
+
+const nouns = (
+  await getCollection('nouns', ({ data }) =>
+    isVisible(data, import.meta.env.DEV, REQUIRED_CHECKS.noun),
+  )
+).map((e) => e.data);
+
+const groups = groupByTopic(nouns);
+const hasUnverified = nouns.some((n) => !isChecked(n, 'translation'));
+---
+
+<BaseLayout title="Nouns" description="Everyday A1 German nouns with article and plural.">
+  <h1>Nouns</h1>
+  <p class="lead">
+    {nouns.length} everyday A1 nouns. Learn every noun together with its article: the article
+    tells you the gender, and the gender decides how the sentence around it changes.
+  </p>
+
+  <nav class="topics" aria-label="Topics">
+    <ul>
+      {
+        groups.map(({ topic, items }) => (
+          <li>
+            <a href={`#${topic.id}`}>
+              {topic.label} <span class="topics__count">{items.length}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  {
+    hasUnverified && (
+      <p class="muted note">
+        <span class="unverified">Dotted underline</span>: translation not yet confirmed by a
+        dictionary.
+      </p>
+    )
+  }
+
+  {
+    groups.map(({ topic, items }) => (
+      <section class="topic" aria-labelledby={topic.id}>
+        <h2 id={topic.id}>{topic.label}</h2>
+        <ul class="card-grid">
+          {items.map((n) => (
+            <li class={`card noun-card noun-card--${n.gender}`}>
+              <p class="noun-card__word">
+                <GenderTag gender={n.gender} />
+                <span lang="de">{n.noun}</span>
+              </p>
+              <p class="noun-card__plural">
+                <span class="muted">Plural:</span> <span lang="de">{pluralText(n)}</span>
+              </p>
+              <p class="noun-card__translation">
+                {isChecked(n, 'translation') ? (
+                  n.translation.en
+                ) : (
+                  <span class="unverified" title="Not yet confirmed by a dictionary">
+                    {n.translation.en}
+                    <span class="visually-hidden"> (translation not yet confirmed)</span>
+                  </span>
+                )}
+                {!isVerified(n) && <span class="badge badge--unverified">unreviewed</span>}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+</BaseLayout>
+
+<style>
+  .topics ul {
+    list-style: none;
+    margin: 0 0 var(--space-4);
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .topics a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--tap);
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .topics a:hover {
+    border-color: var(--accent);
+  }
+
+  .topics__count {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .note {
+    font-size: 0.9rem;
+  }
+
+  .topic {
+    margin-top: var(--space-5);
+    scroll-margin-top: var(--space-4);
+  }
+
+  .noun-card {
+    border-left-width: 5px;
+  }
+
+  .noun-card--m { border-left-color: var(--gender-m); }
+  .noun-card--f { border-left-color: var(--gender-f); }
+  .noun-card--n { border-left-color: var(--gender-n); }
+  .noun-card--pl { border-left-color: var(--gender-pl); }
+
+  .noun-card p {
+    margin: 0;
+  }
+
+  .noun-card__word {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+
+  .noun-card__plural {
+    margin-top: var(--space-1) !important;
+  }
+
+  .noun-card__translation {
+    margin-top: var(--space-2) !important;
+    color: var(--text-muted);
+  }
+</style>
