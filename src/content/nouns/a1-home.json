@@ -1,0 +1,22 @@
+[
+  { "id": "stuhl", "noun": "Stuhl", "gender": "m", "plural": "Stühle", "level": "A1", "translation": { "en": "chair" }, "example": "Der Stuhl ist bequem.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "verbformen", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24" } },
+  { "id": "bett", "noun": "Bett", "gender": "n", "plural": "Betten", "level": "A1", "translation": { "en": "bed" }, "example": "Das Bett ist groß.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "verbformen", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24", "notes": "Rare plural 'Bette' (Flussbett) not shown." } },
+  { "id": "tuer", "noun": "Tür", "gender": "f", "plural": "Türen", "level": "A1", "translation": { "en": "door" }, "example": "Die Tür ist offen.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "verbformen", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24", "notes": "Variant singular 'Türe' exists." } },
+  { "id": "fenster", "noun": "Fenster", "gender": "n", "plural": "Fenster", "level": "A1", "translation": { "en": "window" }, "example": "Das Fenster ist zu.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "verbformen", "wiktionary"], "checked": ["gender", "plural"], "date": "2026-11-24", "notes": "Translation seen only in a page summary, not confirmed." } },
+  { "id": "zimmer", "noun": "Zimmer", "gender": "n", "plural": "Zimmer", "level": "A1", "translation": { "en": "room" }, "example": "Das Zimmer hat zwei Fenster.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24", "notes": "verbformen was rate-limited." } },
+  { "id": "kueche", "noun": "Küche", "gender": "f", "plural": "Küchen", "level": "A1", "translation": { "en": "kitchen" }, "example": "Die Küche ist klein.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "verbformen", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24" } },
+  { "id": "lampe", "noun": "Lampe", "gender": "f", "plural": "Lampen", "level": "A1", "translation": { "en": "lamp" }, "example": "Die Lampe ist kaputt.", "genderRule": null,
+    "verified": { "sources": ["dwds", "verbformen", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24", "notes": "Duden page returned 404." } },
+  { "id": "schrank", "noun": "Schrank", "gender": "m", "plural": "Schränke", "level": "A1", "translation": { "en": "cupboard; wardrobe" }, "example": "Der Schrank steht im Schlafzimmer.", "genderRule": null,
+    "verified": { "sources": ["dwds", "verbformen", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24", "notes": "Duden page returned 404." } },
+  { "id": "wohnung", "noun": "Wohnung", "gender": "f", "plural": "Wohnungen", "level": "A1", "translation": { "en": "apartment, flat" }, "example": "Die Wohnung hat drei Zimmer.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "verbformen", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24" } },
+  { "id": "garten", "noun": "Garten", "gender": "m", "plural": "Gärten", "level": "A1", "translation": { "en": "garden" }, "example": "Der Garten ist schön.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "verbformen", "wiktionary"], "checked": ["gender", "plural"], "date": "2026-11-24", "notes": "Translation seen only in a page summary, not confirmed." } }
+]

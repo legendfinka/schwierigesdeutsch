@@ -1,0 +1,22 @@
+[
+  { "id": "vater", "noun": "Vater", "gender": "m", "plural": "Väter", "level": "A1", "translation": { "en": "father" }, "example": "Der Vater kocht heute das Essen.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "verbformen", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24" } },
+  { "id": "mutter", "noun": "Mutter", "gender": "f", "plural": "Mütter", "level": "A1", "translation": { "en": "mother" }, "example": "Die Mutter liest eine Zeitung.", "genderRule": null,
+    "verified": { "sources": ["dwds", "verbformen", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24", "notes": "Duden page returned 404. 'Mutter' = nut (Technik) has plural Muttern; that is a different entry." } },
+  { "id": "bruder", "noun": "Bruder", "gender": "m", "plural": "Brüder", "level": "A1", "translation": { "en": "brother" }, "example": "Mein Bruder wohnt in Berlin.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "verbformen", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24" } },
+  { "id": "schwester", "noun": "Schwester", "gender": "f", "plural": "Schwestern", "level": "A1", "translation": { "en": "sister" }, "example": "Meine Schwester ist zehn Jahre alt.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "verbformen", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24" } },
+  { "id": "freund", "noun": "Freund", "gender": "m", "plural": "Freunde", "level": "A1", "translation": { "en": "friend; boyfriend" }, "example": "Mein Freund spielt Fußball.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24", "notes": "'boyfriend' is supported by Duden sense 'Partner'." } },
+  { "id": "freundin", "noun": "Freundin", "gender": "f", "plural": "Freundinnen", "level": "A1", "translation": { "en": "friend (female); girlfriend" }, "example": "Meine Freundin trinkt gern Tee.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24" } },
+  { "id": "lehrer", "noun": "Lehrer", "gender": "m", "plural": "Lehrer", "level": "A1", "translation": { "en": "teacher" }, "example": "Der Lehrer schreibt an die Tafel.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24" } },
+  { "id": "junge", "noun": "Junge", "gender": "m", "plural": "Jungen", "level": "A1", "translation": { "en": "boy" }, "example": "Der Junge spielt im Park.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24", "notes": "Colloquial plurals Jungs/Jungens also exist." } },
+  { "id": "maedchen", "noun": "Mädchen", "gender": "n", "plural": "Mädchen", "level": "A1", "translation": { "en": "girl" }, "example": "Das Mädchen singt ein Lied.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24" } },
+  { "id": "baby", "noun": "Baby", "gender": "n", "plural": "Babys", "level": "A1", "translation": { "en": "baby" }, "example": "Das Baby schläft.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24" } }
+]

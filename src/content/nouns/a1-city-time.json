@@ -1,0 +1,22 @@
+[
+  { "id": "auto", "noun": "Auto", "gender": "n", "plural": "Autos", "level": "A1", "translation": { "en": "car" }, "example": "Das Auto ist neu.", "genderRule": null,
+    "verified": { "sources": ["dwds", "verbformen", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24", "notes": "Duden page returned 404." } },
+  { "id": "bus", "noun": "Bus", "gender": "m", "plural": "Busse", "level": "A1", "translation": { "en": "bus" }, "example": "Der Bus kommt um neun Uhr.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "verbformen", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24" } },
+  { "id": "zug", "noun": "Zug", "gender": "m", "plural": "Züge", "level": "A1", "translation": { "en": "train" }, "example": "Der Zug fährt nach München.", "genderRule": null,
+    "verified": { "sources": ["dwds", "verbformen", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24", "notes": "Duden page returned 404." } },
+  { "id": "strasse", "noun": "Straße", "gender": "f", "plural": "Straßen", "level": "A1", "translation": { "en": "street, road" }, "example": "Die Straße ist lang.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "wiktionary"], "checked": ["gender", "plural"], "date": "2026-11-24", "notes": "Translation seen only in a page summary, not confirmed." } },
+  { "id": "stadt", "noun": "Stadt", "gender": "f", "plural": "Städte", "level": "A1", "translation": { "en": "city, town" }, "example": "Die Stadt ist sehr alt.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "wiktionary"], "checked": ["gender", "plural"], "date": "2026-11-24", "notes": "Translation seen only in a page summary, not confirmed." } },
+  { "id": "bahnhof", "noun": "Bahnhof", "gender": "m", "plural": "Bahnhöfe", "level": "A1", "translation": { "en": "train station" }, "example": "Der Bahnhof ist nicht weit.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24" } },
+  { "id": "tag", "noun": "Tag", "gender": "m", "plural": "Tage", "level": "A1", "translation": { "en": "day" }, "example": "Heute ist ein schöner Tag.", "genderRule": null,
+    "verified": { "sources": ["dwds", "wiktionary"], "checked": ["gender", "plural"], "date": "2026-11-24", "notes": "Duden page returned 404, verbformen was rate-limited. Translation seen only in a page summary, not confirmed." } },
+  { "id": "woche", "noun": "Woche", "gender": "f", "plural": "Wochen", "level": "A1", "translation": { "en": "week" }, "example": "Die Woche hat sieben Tage.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24" } },
+  { "id": "jahr", "noun": "Jahr", "gender": "n", "plural": "Jahre", "level": "A1", "translation": { "en": "year" }, "example": "Das Jahr hat zwölf Monate.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "wiktionary"], "checked": ["gender", "plural"], "date": "2026-11-24", "notes": "Translation seen only in a page summary, not confirmed." } },
+  { "id": "uhr", "noun": "Uhr", "gender": "f", "plural": "Uhren", "level": "A1", "translation": { "en": "clock, watch" }, "example": "Die Uhr hängt an der Wand.", "genderRule": null,
+    "verified": { "sources": ["duden", "dwds", "wiktionary"], "checked": ["gender", "plural", "translation"], "date": "2026-11-24", "notes": "'Uhr' = o'clock has no plural." } }
+]
