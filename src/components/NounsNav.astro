@@ -1,0 +1,59 @@
+---
+import { url } from '../lib/url';
+
+interface Props {
+  current: 'overview' | 'practice';
+}
+
+const { current } = Astro.props;
+const tabs = [
+  { id: 'overview', href: url('/nouns/'), label: 'Topics & words' },
+  { id: 'practice', href: url('/nouns/practice/'), label: 'Practice' },
+] as const;
+---
+
+<nav class="subnav" aria-label="Nouns">
+  <ul>
+    {
+      tabs.map((t) => (
+        <li>
+          <a href={t.href} aria-current={t.id === current ? 'page' : undefined}>
+            {t.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .subnav ul {
+    list-style: none;
+    margin: 0 0 var(--space-5);
+    padding: 0;
+    display: flex;
+    gap: var(--space-2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .subnav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    padding: 0 var(--space-3);
+    margin-bottom: -1px;
+    border-bottom: 3px solid transparent;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .subnav a:hover {
+    color: var(--text);
+  }
+
+  .subnav a[aria-current='page'] {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+  }
+</style>

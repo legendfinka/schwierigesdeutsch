@@ -1,0 +1,166 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import NounsNav from '../../components/NounsNav.astro';
+import NounCard from '../../components/NounCard.astro';
+import ProgressBar from '../../components/ProgressBar.astro';
+import { visibleNouns } from '../../lib/load-nouns';
+import type { Noun } from '../../lib/schemas';
+import { groupByTopic, type Topic } from '../../lib/topics';
+import { groupByLevel } from '../../lib/levels';
+import { url } from '../../lib/url';
+import { isChecked } from '../../lib/visibility';
+
+export async function getStaticPaths() {
+  const groups = groupByTopic(await visibleNouns());
+  return groups.map(({ topic, items }) => ({ params: { topic: topic.id }, props: { topic, items } }));
+}
+
+interface Props {
+  topic: Topic;
+  items: Noun[];
+}
+
+const { topic, items } = Astro.props;
+const hasUnverified = items.some((n) => !isChecked(n, 'translation'));
+const levels = groupByLevel(items);
+---
+
+<BaseLayout title={`${topic.label} · Nouns`} description={`German nouns: ${topic.label}.`}>
+  <h1>Nouns</h1>
+  <NounsNav current="overview" />
+
+  <p><a href={url('/nouns/')}>← All topics</a></p>
+
+  <div class="topic-head">
+    <h2>{topic.label}</h2>
+    <p class="muted">{items.length} nouns</p>
+    <ProgressBar ids={items.map((n) => n.id)} showDue />
+    <a class="btn btn--primary topic-head__cta" href={url(`/nouns/practice/?topic=${topic.id}`)}>
+      Practice this topic
+    </a>
+  </div>
+
+  {
+    hasUnverified && (
+      <p class="muted note">
+        Article and plural are checked against dictionaries. The English meanings are not checked
+        word by word yet.
+      </p>
+    )
+  }
+
+  {
+    levels.length > 1 && (
+      <nav class="levels" aria-label="Jump to a level">
+        <ul>
+          {levels.map(({ level, items: inLevel }) => (
+            <li>
+              <a href={`#${level.toLowerCase()}`}>
+                {level} <span class="levels__count">{inLevel.length}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )
+  }
+
+  {
+    levels.map(({ level, items: inLevel }) => (
+      <section class="level" aria-labelledby={level.toLowerCase()}>
+        <h3 id={level.toLowerCase()}>
+          {level} <span class="muted level__count">{inLevel.length} nouns</span>
+        </h3>
+        <ProgressBar ids={inLevel.map((n) => n.id)} />
+        <a
+          class="level__practice"
+          href={url(`/nouns/practice/?topic=${topic.id}&level=${level}`)}
+        >
+          Practice {level}
+        </a>
+        <ul class="card-grid">
+          {inLevel.map((n) => <NounCard noun={n} />)}
+        </ul>
+      </section>
+    ))
+  }
+</BaseLayout>
+
+<style>
+  .topic-head {
+    margin-bottom: var(--space-5);
+  }
+
+  .topic-head h2 {
+    margin: 0;
+  }
+
+  .topic-head p {
+    margin: 0;
+  }
+
+  .topic-head__cta {
+    display: inline-flex;
+    align-items: center;
+    margin-top: var(--space-3);
+    text-decoration: none;
+  }
+
+  .note {
+    font-size: 0.9rem;
+  }
+
+  .levels ul {
+    list-style: none;
+    margin: 0 0 var(--space-4);
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .levels a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--tap);
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .levels a:hover {
+    border-color: var(--accent);
+  }
+
+  .levels__count {
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+
+  .level {
+    margin-top: var(--space-5);
+    scroll-margin-top: var(--space-4);
+  }
+
+  .level h3 {
+    margin: 0;
+  }
+
+  .level__count {
+    font-size: 0.9rem;
+    font-weight: 400;
+  }
+
+  .level__practice {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    margin-bottom: var(--space-2);
+  }
+</style>

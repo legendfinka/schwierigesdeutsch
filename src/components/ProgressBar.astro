@@ -1,0 +1,65 @@
+---
+// Progress for a set of nouns. Filled in the browser, since progress lives there.
+interface Props {
+  ids: string[];
+  showDue?: boolean;
+  large?: boolean;
+}
+
+const { ids, showDue = false, large = false } = Astro.props;
+---
+
+<div
+  class:list={['stats', { 'stats--large': large }]}
+  data-stats
+  data-ids={ids.join(' ')}
+  data-due={showDue ? '' : undefined}
+  hidden
+>
+  <div class="bar" aria-hidden="true">
+    <span class="bar__fill" data-part="learned"></span>
+    <span class="bar__fill bar__fill--soft" data-part="learning"></span>
+  </div>
+  <p class="stats__text muted"></p>
+</div>
+
+<script>
+  import { createStore } from '../lib/storage';
+  import { cardStats, percents, statsText } from '../lib/stats';
+
+  const { progress } = createStore().load();
+  const now = Date.now();
+
+  for (const el of document.querySelectorAll<HTMLElement>('[data-stats]')) {
+    const ids = (el.dataset.ids ?? '').split(' ').filter(Boolean);
+    const s = cardStats(ids, progress.srs, now);
+    const p = percents(s);
+    for (const part of ['learned', 'learning'] as const) {
+      const fill = el.querySelector<HTMLElement>(`[data-part="${part}"]`);
+      if (fill) fill.style.width = `${p[part]}%`;
+    }
+    const due = el.dataset.due !== undefined && s.due > 0 ? ` · ${s.due} due now` : '';
+    const text = el.querySelector('.stats__text');
+    if (text) text.textContent = statsText(s) + due;
+    el.hidden = false;
+  }
+</script>
+
+<style>
+  .stats {
+    margin: var(--space-2) 0;
+  }
+
+  .stats__text {
+    margin: var(--space-1) 0 0;
+    font-size: 0.85rem;
+  }
+
+  .stats--large .stats__text {
+    font-size: 1rem;
+  }
+
+  .stats--large :global(.bar) {
+    height: 0.9rem;
+  }
+</style>

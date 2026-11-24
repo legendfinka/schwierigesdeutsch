@@ -125,6 +125,11 @@ a:hover {
 
 /* Helpers */
 
+/* Beats any display rule, so hidden always hides. */
+[hidden] {
+  display: none !important;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -182,6 +187,62 @@ a.card {
 
 a.card:hover {
   border-color: var(--accent);
+}
+
+/* Buttons */
+
+.btn {
+  min-height: var(--tap);
+  padding: 0 var(--space-4);
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.btn:hover {
+  border-color: var(--accent);
+  background: var(--surface-sunk);
+}
+
+.btn--primary {
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.btn--primary:hover {
+  background: var(--accent);
+  filter: brightness(1.1);
+}
+
+/* Progress bar. Always paired with text, so color is never the only signal. */
+
+.bar {
+  display: flex;
+  height: 0.6rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-sunk);
+}
+
+.bar__fill {
+  width: 0;
+  background: var(--accent);
+}
+
+.bar__fill--soft {
+  background: var(--accent-soft);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bar__fill {
+    transition: width 0.3s ease;
+  }
 }
 
 /* Badges */

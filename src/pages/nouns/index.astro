@@ -1,76 +1,77 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import GenderTag from '../../components/GenderTag.astro';
-import { pluralText } from '../../lib/gender';
+import NounsNav from '../../components/NounsNav.astro';
+import ProgressBar from '../../components/ProgressBar.astro';
+import { visibleNouns } from '../../lib/load-nouns';
+import { groupByLevel } from '../../lib/levels';
 import { groupByTopic } from '../../lib/topics';
-import { REQUIRED_CHECKS, isChecked, isVerified, isVisible } from '../../lib/visibility';
+import { url } from '../../lib/url';
 
-const nouns = (
-  await getCollection('nouns', ({ data }) =>
-    isVisible(data, import.meta.env.DEV, REQUIRED_CHECKS.noun),
-  )
-).map((e) => e.data);
-
-const groups = groupByTopic(nouns);
-const hasUnverified = nouns.some((n) => !isChecked(n, 'translation'));
+const nouns = await visibleNouns();
+const levels = groupByLevel(nouns).map(({ level, items }) => ({
+  level,
+  items,
+  topics: groupByTopic(items),
+}));
 ---
 
-<BaseLayout title="Nouns" description="Everyday A1 German nouns with article and plural.">
+<BaseLayout title="Nouns" description="German nouns by level and topic, with article and plural.">
   <h1>Nouns</h1>
+  <NounsNav current="overview" />
+
   <p class="lead">
-    {nouns.length} everyday A1 nouns. Learn every noun together with its article: the article
-    tells you the gender, and the gender decides how the sentence around it changes.
+    Learn every noun together with its article: the article tells you the gender, and the
+    gender decides how the sentence around it changes.
   </p>
 
-  <nav class="topics" aria-label="Topics">
-    <ul>
-      {
-        groups.map(({ topic, items }) => (
-          <li>
-            <a href={`#${topic.id}`}>
-              {topic.label} <span class="topics__count">{items.length}</span>
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-  </nav>
+  <section class="card overview" aria-labelledby="your-progress">
+    <h2 id="your-progress">Your progress</h2>
+    <p class="muted overview__count">{nouns.length} nouns</p>
+    <ProgressBar ids={nouns.map((n) => n.id)} showDue large />
+    <a class="btn btn--primary overview__cta" href={url('/nouns/practice/')}>Practice all</a>
+  </section>
 
   {
-    hasUnverified && (
-      <p class="muted note">
-        <span class="unverified">Dotted underline</span>: translation not yet confirmed by a
-        dictionary.
-      </p>
+    levels.length > 1 && (
+      <nav class="levels" aria-label="Jump to a level">
+        <ul>
+          {levels.map(({ level, items }) => (
+            <li>
+              <a href={`#${level.toLowerCase()}`}>
+                {level} <span class="levels__count">{items.length}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
     )
   }
 
   {
-    groups.map(({ topic, items }) => (
-      <section class="topic" aria-labelledby={topic.id}>
-        <h2 id={topic.id}>{topic.label}</h2>
+    levels.map(({ level, items, topics }) => (
+      <section class="level" aria-labelledby={level.toLowerCase()}>
+        <h2 id={level.toLowerCase()}>
+          {level} <span class="muted level__count">{items.length} nouns</span>
+        </h2>
+        <ProgressBar ids={items.map((n) => n.id)} showDue />
+        <a class="btn level__practice" href={url(`/nouns/practice/?level=${level}`)}>
+          Practice {level}
+        </a>
+
         <ul class="card-grid">
-          {items.map((n) => (
-            <li class={`card noun-card noun-card--${n.gender}`}>
-              <p class="noun-card__word">
-                <GenderTag gender={n.gender} />
-                <span lang="de">{n.noun}</span>
-              </p>
-              <p class="noun-card__plural">
-                <span class="muted">Plural:</span> <span lang="de">{pluralText(n)}</span>
-              </p>
-              <p class="noun-card__translation">
-                {isChecked(n, 'translation') ? (
-                  n.translation.en
-                ) : (
-                  <span class="unverified" title="Not yet confirmed by a dictionary">
-                    {n.translation.en}
-                    <span class="visually-hidden"> (translation not yet confirmed)</span>
-                  </span>
-                )}
-                {!isVerified(n) && <span class="badge badge--unverified">unreviewed</span>}
-              </p>
+          {topics.map(({ topic, items: inTopic }) => (
+            <li class="card topic-card">
+              <h3>
+                <a href={url(`/nouns/${topic.id}/#${level.toLowerCase()}`)}>{topic.label}</a>
+              </h3>
+              <p class="muted">{inTopic.length} nouns</p>
+              <ProgressBar ids={inTopic.map((n) => n.id)} />
+              <a
+                class="btn topic-card__practice"
+                href={url(`/nouns/practice/?topic=${topic.id}&level=${level}`)}
+              >
+                Practice
+              </a>
             </li>
           ))}
         </ul>
@@ -80,7 +81,28 @@ const hasUnverified = nouns.some((n) => !isChecked(n, 'translation'));
 </BaseLayout>
 
 <style>
-  .topics ul {
+  .overview {
+    margin-bottom: var(--space-5);
+  }
+
+  .overview h2 {
+    margin-top: 0;
+  }
+
+  .overview__count {
+    margin-bottom: var(--space-2);
+  }
+
+  .overview__cta,
+  .level__practice,
+  .topic-card__practice {
+    display: inline-flex;
+    align-items: center;
+    margin-top: var(--space-3);
+    text-decoration: none;
+  }
+
+  .levels ul {
     list-style: none;
     margin: 0 0 var(--space-4);
     padding: 0;
@@ -89,7 +111,7 @@ const hasUnverified = nouns.some((n) => !isChecked(n, 'translation'));
     gap: var(--space-2);
   }
 
-  .topics a {
+  .levels a {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
@@ -100,53 +122,57 @@ const hasUnverified = nouns.some((n) => !isChecked(n, 'translation'));
     background: var(--surface);
     color: var(--text);
     text-decoration: none;
-  }
-
-  .topics a:hover {
-    border-color: var(--accent);
-  }
-
-  .topics__count {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-  }
-
-  .note {
-    font-size: 0.9rem;
-  }
-
-  .topic {
-    margin-top: var(--space-5);
-    scroll-margin-top: var(--space-4);
-  }
-
-  .noun-card {
-    border-left-width: 5px;
-  }
-
-  .noun-card--m { border-left-color: var(--gender-m); }
-  .noun-card--f { border-left-color: var(--gender-f); }
-  .noun-card--n { border-left-color: var(--gender-n); }
-  .noun-card--pl { border-left-color: var(--gender-pl); }
-
-  .noun-card p {
-    margin: 0;
-  }
-
-  .noun-card__word {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    font-size: 1.3rem;
     font-weight: 600;
   }
 
-  .noun-card__plural {
-    margin-top: var(--space-1) !important;
+  .levels a:hover {
+    border-color: var(--accent);
   }
 
-  .noun-card__translation {
-    margin-top: var(--space-2) !important;
+  .levels__count {
+    font-size: 0.8rem;
+    font-weight: 400;
     color: var(--text-muted);
+  }
+
+  .level {
+    margin-top: var(--space-6);
+    scroll-margin-top: var(--space-4);
+  }
+
+  .level h2 {
+    margin: 0;
+  }
+
+  .level__count {
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  .level__practice {
+    margin-bottom: var(--space-4);
+  }
+
+  .topic-card {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topic-card h3 {
+    margin: 0 0 var(--space-1);
+  }
+
+  .topic-card p {
+    margin: 0;
+  }
+
+  /* Pins the button to the bottom so cards line up. */
+  .topic-card__practice {
+    margin-top: auto;
+    align-self: flex-start;
+  }
+
+  .topic-card :global(.stats) {
+    margin-bottom: var(--space-3);
   }
 </style>

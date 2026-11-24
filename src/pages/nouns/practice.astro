@@ -1,0 +1,42 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import NounsNav from '../../components/NounsNav.astro';
+import NounTrainer from '../../components/NounTrainer.astro';
+import { visibleNouns } from '../../lib/load-nouns';
+import { toTrainerCard } from '../../lib/noun-trainer';
+import { groupByTopic } from '../../lib/topics';
+import { url } from '../../lib/url';
+import { isChecked } from '../../lib/visibility';
+
+const nouns = await visibleNouns();
+const topics = groupByTopic(nouns).map((g) => g.topic);
+const hasUnverified = nouns.some((n) => !isChecked(n, 'translation') || !isChecked(n, 'example'));
+---
+
+<BaseLayout title="Practice · Nouns" description="Practise German articles and plurals.">
+  <h1>Nouns</h1>
+  <NounsNav current="practice" />
+
+  <noscript>
+    <p class="card">
+      The trainer needs JavaScript. You can still <a href={url('/nouns/')}>browse the nouns</a>.
+    </p>
+  </noscript>
+
+  <NounTrainer cards={nouns.map(toTrainerCard)} topics={topics} />
+
+  {
+    hasUnverified && (
+      <p class="muted note">
+        Article and plural are checked against dictionaries. The English meanings and the example
+        sentences are not checked word by word yet.
+      </p>
+    )
+  }
+</BaseLayout>
+
+<style>
+  .note {
+    font-size: 0.9rem;
+  }
+</style>

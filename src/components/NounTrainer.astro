@@ -1,0 +1,469 @@
+---
+import type { TrainerCard } from '../lib/noun-trainer';
+import { levelsOf } from '../lib/levels';
+import type { Topic } from '../lib/topics';
+import { url } from '../lib/url';
+
+interface Props {
+  cards: TrainerCard[];
+  topics: Topic[];
+}
+
+const { cards, topics } = Astro.props;
+const here = url('/nouns/practice/');
+const topicChips = [
+  { id: '', label: 'All topics', href: here },
+  ...topics.map((t) => ({ id: t.id, label: t.label, href: `${here}?topic=${t.id}` })),
+];
+// The script sets the hrefs, since they keep the chosen topic.
+const levelChips = [{ id: '', label: 'All levels' }, ...levelsOf(cards).map((l) => ({ id: l, label: l }))];
+// "<" is escaped so the data can never close the script tag.
+const json = JSON.stringify(cards).replace(/</g, '\\u003c');
+---
+
+<!-- Hidden until the script runs; no-JS readers get the page's noscript note. -->
+<section id="trainer" class="trainer" aria-label="Trainer" hidden>
+  <nav class="trainer__topics" aria-label="Choose a topic">
+    <ul>
+      {
+        topicChips.map((c) => (
+          <li>
+            <a href={c.href} data-topic={c.id}>
+              {c.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  <nav id="t-levels" class="trainer__topics" aria-label="Choose a level" hidden>
+    <ul>
+      {
+        levelChips.map((c) => (
+          <li>
+            <a href={here} data-level={c.id}>
+              {c.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  <p id="t-note" class="trainer__note" role="status" hidden></p>
+
+  <div id="t-card" class="card trainer__card" hidden>
+    <div class="bar" aria-hidden="true"><span id="t-bar" class="bar__fill"></span></div>
+    <p id="t-progress" class="trainer__progress muted"></p>
+    <p class="trainer__question">Which article?</p>
+    <p id="t-word" class="trainer__word" lang="de"></p>
+    <p id="t-translation" class="trainer__translation muted"></p>
+
+    <div id="t-article" class="trainer__choices" role="group" aria-label="Choose the article">
+      <button type="button" class="btn" data-article="der">der</button>
+      <button type="button" class="btn" data-article="die">die</button>
+      <button type="button" class="btn" data-article="das">das</button>
+    </div>
+
+    <form id="t-plural-form" class="trainer__plural" hidden>
+      <label for="t-plural">Plural: <span lang="de">die</span> …</label>
+      <div class="trainer__row">
+        <input
+          id="t-plural"
+          type="text"
+          lang="de"
+          autocomplete="off"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+        />
+        <button type="submit" class="btn btn--primary">Check</button>
+      </div>
+      <p class="muted trainer__hint">Type ä, ö, ü, ß, or ae, oe, ue, ss.</p>
+    </form>
+
+    <div id="t-reveal" class="trainer__reveal" aria-live="polite" hidden></div>
+  </div>
+
+  <div id="t-done" class="card trainer__card" hidden>
+    <p id="t-done-text" class="trainer__done" tabindex="-1"></p>
+    <p id="t-done-next" class="muted"></p>
+    <button id="t-more" type="button" class="btn btn--primary" hidden>Practice more</button>
+  </div>
+
+  <script id="trainer-data" type="application/json" set:html={json} />
+</section>
+
+<script>
+  import { createStore } from '../lib/storage';
+  import { newCard, review } from '../lib/srs';
+  import { ARTICLE } from '../lib/gender';
+  import { reportUrl } from '../lib/site';
+  import {
+    advance,
+    asksPlural,
+    currentEntry,
+    finalGrade,
+    formatWait,
+    gradeCard,
+    levelFromQuery,
+    nextDueIn,
+    pickCards,
+    sessionProgress,
+    startSession,
+    topicFromQuery,
+    type Article,
+    type Entry,
+    type Rating,
+    type Result,
+    type Session,
+    type TrainerCard,
+  } from '../lib/noun-trainer';
+
+  const byId = <T extends HTMLElement>(id: string): T => {
+    const e = document.getElementById(id);
+    if (!e) throw new Error(`missing #${id}`);
+    return e as T;
+  };
+
+  function make(tag: string, text = '', cls = ''): HTMLElement {
+    const e = document.createElement(tag);
+    e.textContent = text;
+    if (cls) e.className = cls;
+    return e;
+  }
+
+  function init() {
+    const root = byId('trainer');
+    const all: TrainerCard[] = JSON.parse(byId('trainer-data').textContent ?? '[]');
+    const picked = pickCards(all, topicFromQuery(location.search), levelFromQuery(location.search));
+    const { cards } = picked;
+    if (cards.length === 0) return;
+    for (const a of root.querySelectorAll<HTMLAnchorElement>('a[data-topic]')) {
+      if (a.dataset.topic === (picked.topic ?? '')) a.setAttribute('aria-current', 'page');
+    }
+    // One level only: nothing to choose.
+    byId('t-levels').hidden = picked.levels.length < 2;
+    for (const a of root.querySelectorAll<HTMLAnchorElement>('a[data-level]')) {
+      const level = a.dataset.level ?? '';
+      const q = new URLSearchParams();
+      if (picked.topic) q.set('topic', picked.topic);
+      if (level) q.set('level', level);
+      a.search = q.toString();
+      a.parentElement!.hidden = level !== '' && !(picked.levels as string[]).includes(level);
+      if (level === (picked.level ?? '')) a.setAttribute('aria-current', 'page');
+    }
+    const byCard = new Map(cards.map((c) => [c.id, c]));
+    const ids = cards.map((c) => c.id);
+
+    const store = createStore();
+    const note = byId('t-note');
+    const cardBox = byId('t-card');
+    const doneBox = byId('t-done');
+    const articleBox = byId('t-article');
+    const pluralForm = byId<HTMLFormElement>('t-plural-form');
+    const pluralInput = byId<HTMLInputElement>('t-plural');
+    const reveal = byId('t-reveal');
+
+    let session: Session = { queue: [], total: 0, firstTry: 0 };
+    let current: { entry: Entry; card: TrainerCard } | null = null;
+    let article: Article = 'der';
+    let saveFailed = false;
+    let loadNote = '';
+
+    function updateNote() {
+      const text = store.outdated
+        ? 'Your saved progress is from a newer version of this site. It is left untouched, and this session is not saved.'
+        : !store.persistent || saveFailed
+          ? "Progress won't be saved: your browser blocks or has filled its storage. It is lost when you close this page."
+          : loadNote;
+      note.textContent = text;
+      note.hidden = text === '';
+    }
+
+    function begin() {
+      const { progress, status } = store.load();
+      loadNote =
+        status === 'repaired'
+          ? 'Some damaged saved entries were removed.'
+          : status === 'reset'
+            ? 'Your saved progress could not be read, so we started fresh. A backup was kept in your browser.'
+            : '';
+      session = startSession(ids, progress.srs, Date.now());
+      updateNote();
+      render();
+    }
+
+    function render() {
+      const entry = currentEntry(session);
+      if (!entry) return showDone();
+      const card = byCard.get(entry.id);
+      if (!card) {
+        session = advance(session, true);
+        return render();
+      }
+      current = { entry, card };
+      doneBox.hidden = true;
+      cardBox.hidden = false;
+      reveal.hidden = true;
+      reveal.replaceChildren();
+      pluralForm.hidden = true;
+      pluralInput.value = '';
+      articleBox.hidden = false;
+
+      const { done, total } = sessionProgress(session);
+      byId('t-bar').style.width = `${Math.round((done / total) * 100)}%`;
+      byId('t-progress').textContent = entry.retry
+        ? 'Once more (not counted)'
+        : `Card ${done + 1} of ${total}`;
+      byId('t-word').textContent = card.noun;
+      byId('t-translation').textContent = card.translation;
+      articleBox.querySelector<HTMLButtonElement>('button')?.focus();
+    }
+
+    function showDone() {
+      current = null;
+      cardBox.hidden = true;
+      doneBox.hidden = false;
+      const now = Date.now();
+      const { progress } = store.load();
+      byId('t-done-text').textContent =
+        session.total > 0
+          ? `Done. ${session.firstTry} of ${session.total} right on the first try.`
+          : 'Nothing to practise right now.';
+      const wait = nextDueIn(ids, progress.srs, now);
+      byId('t-done-next').textContent =
+        wait === null ? '' : `Next card is due in ${formatWait(wait)}.`;
+      const more = byId<HTMLButtonElement>('t-more');
+      more.hidden = startSession(ids, progress.srs, now).queue.length === 0;
+      byId('t-done-text').focus();
+    }
+
+    function showResult() {
+      if (!current) return;
+      const { card, entry } = current;
+      const result = gradeCard(card, article, pluralInput.value);
+      articleBox.hidden = true;
+      pluralForm.hidden = true;
+
+      const verdict = make('p', result.correct ? 'Correct!' : 'Not quite.', 'trainer__verdict');
+      verdict.tabIndex = -1;
+
+      const answer = make('p', '', 'trainer__answer');
+      answer.lang = 'de';
+      answer.append(make('span', ARTICLE[card.gender], `gender-${card.gender}`), ` ${card.noun}`);
+      if (card.plural !== null && !card.pluralOnly) answer.append(` · die ${card.plural}`);
+      if (card.plural === null) answer.append(' · no plural');
+
+      const lines: HTMLElement[] = [];
+      if (!result.articleOk) lines.push(make('p', `You chose “${article}”.`, 'muted'));
+      if (result.pluralOk === false)
+        lines.push(make('p', `You typed “${pluralInput.value.trim()}”.`, 'muted'));
+      if (result.pluralOk && !result.pluralExact)
+        lines.push(make('p', `Write it as: ${card.plural}`, 'muted'));
+
+      const example = make('p', '', 'trainer__example');
+      example.append('Example: ', card.example);
+
+      const why = make(
+        'p',
+        card.genderRule
+          ? `Gender rule: ${card.genderRule}.`
+          : 'Learn the article together with the noun.',
+        'muted',
+      );
+
+      const report = make('a', 'Report a mistake', 'trainer__report') as HTMLAnchorElement;
+      report.href = reportUrl(card.noun, card.id);
+      report.target = '_blank';
+      report.rel = 'noopener noreferrer';
+
+      const buttons = make('div', '', 'trainer__choices');
+      const ratings: Array<[Rating | null, string]> =
+        result.correct && !entry.retry
+          ? [['hard', 'Hard'], ['good', 'Good'], ['easy', 'Easy']]
+          : [[null, 'Next']];
+      for (const [rating, label] of ratings) {
+        const b = make('button', label, rating === 'good' || rating === null ? 'btn btn--primary' : 'btn');
+        (b as HTMLButtonElement).type = 'button';
+        b.addEventListener('click', () => finish(result, rating));
+        buttons.append(b);
+      }
+
+      reveal.replaceChildren(verdict, answer, ...lines, example, why, report, buttons);
+      reveal.hidden = false;
+      verdict.focus();
+    }
+
+    function finish(result: Result, rating: Rating | null) {
+      if (!current) return;
+      const { entry, card } = current;
+      current = null;
+      if (!entry.retry) {
+        const grade = finalGrade(result, rating ?? 'good');
+        const now = Date.now();
+        const saved = store.update((p) => {
+          p.srs[card.id] = review(p.srs[card.id] ?? newCard(now), grade, now);
+        });
+        saveFailed = !saved.ok && saved.reason !== 'newer-version';
+        updateNote();
+      }
+      session = advance(session, result.correct);
+      render();
+    }
+
+    articleBox.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-article]');
+      if (!b || !current) return;
+      article = b.dataset.article as Article;
+      if (asksPlural(current.card)) {
+        articleBox.hidden = true;
+        pluralForm.hidden = false;
+        pluralInput.focus();
+      } else {
+        showResult();
+      }
+    });
+
+    pluralForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      showResult();
+    });
+
+    byId('t-more').addEventListener('click', begin);
+
+    root.hidden = false;
+    begin();
+  }
+
+  init();
+</script>
+
+<style is:global>
+  .trainer {
+    margin: 0 0 var(--space-5);
+  }
+
+  .trainer__topics ul {
+    list-style: none;
+    margin: 0 0 var(--space-4);
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .trainer__topics a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .trainer__topics a:hover {
+    border-color: var(--accent);
+  }
+
+  .trainer__topics a[aria-current='page'] {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .trainer__card .bar {
+    margin-bottom: var(--space-2);
+  }
+
+  .trainer__note {
+    border: 1px solid var(--border);
+    border-left: 5px solid var(--accent);
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    padding: var(--space-3);
+  }
+
+  .trainer__card p {
+    margin: 0 0 var(--space-2);
+  }
+
+  .trainer__progress {
+    font-size: 0.9rem;
+  }
+
+  .trainer__question {
+    color: var(--text-muted);
+  }
+
+  .trainer__word {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 600;
+  }
+
+  .trainer__translation {
+    margin-bottom: var(--space-4) !important;
+  }
+
+  .trainer__choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+
+  .trainer__choices .btn {
+    flex: 1 1 5rem;
+  }
+
+  .trainer__row {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+  }
+
+  .trainer__row input {
+    flex: 1;
+    min-width: 0;
+    min-height: var(--tap);
+    padding: 0 var(--space-3);
+    font: inherit;
+    font-size: 1.1rem;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+
+  .trainer__hint {
+    font-size: 0.85rem;
+    margin-top: var(--space-2) !important;
+  }
+
+  .trainer__verdict {
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+
+  .trainer__answer {
+    font-size: 1.35rem;
+    font-weight: 600;
+  }
+
+  .trainer__report {
+    display: inline-block;
+    margin-bottom: var(--space-2);
+    font-size: 0.9rem;
+  }
+
+  .trainer__done {
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+</style>

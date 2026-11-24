@@ -1,0 +1,58 @@
+---
+import GenderTag from './GenderTag.astro';
+import { pluralText } from '../lib/gender';
+import type { Noun } from '../lib/schemas';
+import { isVerified } from '../lib/visibility';
+
+interface Props {
+  noun: Noun;
+}
+
+const { noun: n } = Astro.props;
+---
+
+<li class={`card noun-card noun-card--${n.gender}`}>
+  <p class="noun-card__word">
+    <GenderTag gender={n.gender} />
+    <span lang="de">{n.noun}</span>
+  </p>
+  <p class="noun-card__plural">
+    <span class="muted">Plural:</span> <span lang="de">{pluralText(n)}</span>
+  </p>
+  <p class="noun-card__translation">
+    {n.translation.en}
+    {!isVerified(n) && <span class="badge badge--unverified">unreviewed</span>}
+  </p>
+</li>
+
+<style>
+  .noun-card {
+    border-left-width: 5px;
+  }
+
+  .noun-card--m { border-left-color: var(--gender-m); }
+  .noun-card--f { border-left-color: var(--gender-f); }
+  .noun-card--n { border-left-color: var(--gender-n); }
+  .noun-card--pl { border-left-color: var(--gender-pl); }
+
+  .noun-card p {
+    margin: 0;
+  }
+
+  .noun-card__word {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+
+  .noun-card__plural {
+    margin-top: var(--space-1) !important;
+  }
+
+  .noun-card__translation {
+    margin-top: var(--space-2) !important;
+    color: var(--text-muted);
+  }
+</style>

@@ -48,7 +48,8 @@ tests/
 
 - Schemas live in `src/lib/schemas.ts` so tests can use them without Astro.
 - A content folder can have many `.json` files; each holds one entry or a list. Use small
-  topic files, e.g. `nouns/a1-food.json`. Every entry needs a unique `id`.
+  topic files, in a folder per level: `nouns/a1/food.json`, `nouns/a2/…`. The folder must match
+  each noun's `level` (tested). Every entry needs a unique `id`.
 - Internal links go through `url()` so a sub-folder `base` works.
 
 ## Content
@@ -99,8 +100,9 @@ correct in any reading, otherwise rewrite it.
 - No `verified` → dev only, with an "unreviewed" badge.
 - Production also needs: nouns `gender` + `plural`, quizzes `answer` + `explanation`,
   sentences `roles` + `translation`.
-- Unchecked parts (e.g. a translation) may show, but marked: `.unverified` style plus one
-  legend line per page. Use `isChecked()`.
+- Unchecked parts may show, but each page says so once (e.g. "English meanings are not checked
+  word by word yet"), with no per-word marker. Translations and examples are checked later, one
+  word at a time. Use `isChecked()` to know what is confirmed.
 - `notes`: source disagreements and caveats.
 
 ### Adding content
@@ -146,11 +148,16 @@ works in memory and says "progress won't be saved" (`store.persistent` is false)
 ## Roadmap
 
 Done: scaffold · verification · content checks · design and layout · storage · SRS
-(`src/lib/srs.ts`: SM-2, wrong cards return in 10 minutes, `nextItems()` builds the queue).
+(`src/lib/srs.ts`: SM-2, wrong cards return in 10 minutes, `nextItems()` builds the queue) ·
+noun trainer (`NounTrainer.astro` island + `noun-trainer.ts`; typed plurals via `grading.ts`;
+"Report a mistake" opens a GitHub issue, repo set in `site.ts`) · nouns split into overview
+(`/nouns/`, progress per topic via `stats.ts`), topic pages (`/nouns/<topic>/`) and
+`/nouns/practice/?topic=…&level=…` · levels inside topics (`levels.ts`; level buttons show
+only when a topic has 2+ levels).
 
-6. **Noun trainer** on `/nouns`: article, then plural, with SRS and a "why" per card. Add
-   the "progress won't be saved" note and a "Report a mistake" link (email or issue).
-7. **Answer checking**: `src/lib/grading.ts`, tested.
+6. **Content growth**: A1 nouns to a few hundred, then A2. About 50 per topic file, checked
+   in batches (see Adding content). Quizzes and sentences grow with steps 8 and 10.
+7. **Answer checking**: grow `src/lib/grading.ts` (plural check exists) for quiz answers.
 8. **Case quizzes** on `/cases`.
 9. **Grammar pages** on `/grammar`, linked from explanations and `genderRule`.
 10. **Sentence breakdown** on `/sentences`.
