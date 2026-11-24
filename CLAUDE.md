@@ -54,8 +54,10 @@ src/
     grammar/          # rule explanation pages (Markdown)
   components/         # UI components (QuizCard, GenderTag, SentenceView, ...)
   layouts/            # BaseLayout.astro (planned)
-  lib/                # schemas.ts, json-array-loader.ts; planned: srs.ts, storage.ts,
-                      # speech.ts, grading.ts
+  lib/                # schemas.ts (Zod), content-checks.ts, german-text.ts (sentence
+                      # helpers), visibility.ts (what ships), json-entries.ts +
+                      # json-array-loader.ts (content loading);
+                      # planned: srs.ts, storage.ts, speech.ts, grading.ts
   pages/              # routes
   styles/             # global.css with design tokens
 tests/                # schemas.test.ts, content.test.ts, ...
@@ -97,22 +99,45 @@ Noun — always store article, plural and an example sentence:
   "genderRule": null,
   "verified": {
     "sources": ["duden", "dwds", "verbformen"],
-    "date": "2026-11-24",
-    "notes": "Article and plural checked."
+    "checked": ["gender", "plural"],
+    "date": "2026-11-24"
   }
 }
 ```
 
-`verified` (all collections) records who confirmed an entry. Leave it out while an entry
-is unverified: it is then shown only in dev, with an "unreviewed" badge, and never in a
-production build. Rules: at least 2 sources, or `"native-speaker"`. Allowed source ids:
-`duden`, `duden-mentor`, `dwds`, `leo`, `verbformen`, `collins`, `wiktionary`,
-`yourdailygerman`, `dartmouth`, `native-speaker`. `date` is `YYYY-MM-DD`. Use `notes` for
-what was and wasn't checked and for source disagreements. Schemas are strict: unknown
-fields (e.g. the old `needsReview`) fail validation.
+`verified` (all collections) records who confirmed an entry and **what** was confirmed.
+Leave it out while an entry is unverified: it is then shown only in dev, with an
+"unreviewed" badge, and never in a production build.
 
-Use `"plural": null` only for nouns with no plural, and `"pluralOnly": true` for nouns
-like *die Leute*. `genderRule` links to a rule id when one applies (e.g. `"suffix-ung"`).
+- `sources`: at least 2, or `"native-speaker"`. Allowed ids: `duden`, `duden-mentor`,
+  `dwds`, `leo`, `verbformen`, `collins`, `wiktionary`, `yourdailygerman`, `dartmouth`,
+  `native-speaker`.
+- `checked`: the parts the sources really confirmed. Allowed: `gender`, `plural`,
+  `translation`, `example`, `answer`, `explanation`, `roles`. Never list a part that was
+  only guessed or seen in a page summary.
+- `date`: `YYYY-MM-DD`. `notes` (optional): source disagreements, failed fetches, caveats.
+- **Production needs** (`REQUIRED_CHECKS` in `src/lib/visibility.ts`): nouns `gender` +
+  `plural`; quizzes `answer` + `explanation`; sentences `roles` + `translation`. A verified
+  entry missing one of these is hidden in production (a test catches this).
+- **The UI must not present an unchecked part as verified.** Use `isChecked(entry, part)`:
+  e.g. show an example sentence as normal only if `example` is checked, otherwise label it
+  (the placeholder page already badges unchecked translations).
+- Schemas are strict: unknown fields (e.g. the old `needsReview`) fail validation.
+
+`gender` is `m`, `f` or `n`, or `pl` for plural-only nouns. Number rules (enforced by the
+schema):
+
+- **Both numbers** (normal): `plural` is the plural form.
+- **Singular only** (*das Wasser*, *die Milch*): `"singularOnly": true` and `"plural": null`.
+  `plural: null` without `singularOnly` is an error.
+- **Plural only** (*die Leute*): `"pluralOnly": true`, `"gender": "pl"`, and `plural` equal
+  to the noun (`"noun": "Leute", "plural": "Leute"`). Article: *die*.
+
+If a noun is singular-only in one sense but has a plural in another (Wasser), follow the
+everyday A1 sense and explain the rest in `verified.notes`.
+
+`genderRule` links to a rule id when one applies (e.g. `"suffix-ung"`) and must match a file
+`src/content/grammar/<id>.md`.
 
 Quiz question:
 
@@ -127,7 +152,11 @@ Quiz question:
   "answer": "der",
   "explanation": { "en": "The receiver of 'geben' is dative. Feminine dative: die → der." },
   "hint": { "en": "With 'geben', the person receiving is in which case?" },
-  "verified": { "sources": ["duden-mentor", "dartmouth"], "date": "2026-11-24" }
+  "verified": {
+    "sources": ["duden-mentor", "dartmouth"],
+    "checked": ["answer", "explanation"],
+    "date": "2026-11-24"
+  }
 }
 ```
 
@@ -240,11 +269,14 @@ Everything stays in the browser. No accounts, no server.
 Do these in order; each step ends with tests passing and something that works.
 
 0. ~~Scaffold: Astro + TS, schemas, content validation tests, 10 verified A1 nouns.~~ Done.
-1. ~~Content verification record: `verified` replaces `needsReview`; unverified content
-   hidden in production, badge in dev.~~ Done.
-2. **Extra content checks** in `tests/content.test.ts`: example sentence article matches the
-   noun's gender when the noun is the subject; quiz options are all the same type;
-   `genderRule` points to an existing rule id (once rules exist).
+1. ~~Content verification record: `verified` (with `sources` + `checked`) replaces
+   `needsReview`; unverified content hidden in production, badge in dev; singular-only and
+   plural-only nouns.~~ Done.
+2. ~~Extra content checks (`src/lib/content-checks.ts`): article before the noun in its
+   example can't be wrong for the gender (flags only combinations wrong in every case);
+   example sentences start capitalized and end with . ! ?; quiz options don't mix
+   articles with other types; `genderRule` must match `src/content/grammar/<id>.md`.~~
+   Done.
 3. **Design system + layout.** Autumn palette and tokens in `global.css` (light + dark),
    `BaseLayout.astro`, top nav, home page, `GenderTag` component. Replace the placeholder
    page.
