@@ -1,0 +1,37 @@
+---
+import { getCollection } from 'astro:content';
+import '../styles/global.css';
+import { isVerified, isVisible } from '../lib/visibility';
+
+const articles = { m: 'der', f: 'die', n: 'das' } as const;
+const nouns = (
+  await getCollection('nouns', ({ data }) => isVisible(data, import.meta.env.DEV))
+).sort((a, b) => a.data.noun.localeCompare(b.data.noun, 'de'));
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SchwierigeDeutsch</title>
+  </head>
+  <body>
+    <h1>SchwierigeDeutsch</h1>
+    <p>Sample A1 nouns (placeholder page).</p>
+    <ul class="noun-list">
+      {
+        nouns.map(({ data: n }) => (
+          <li>
+            <span class={`article gender-${n.gender}`}>{articles[n.gender]}</span>
+            <span lang="de">{n.noun}</span>
+            <span lang="de">
+              {n.plural ? `(Pl. die ${n.plural})` : '(no plural)'}
+            </span>
+            <span>– {n.translation.en}</span>
+            {!isVerified(n) && <span class="badge-unreviewed">unreviewed</span>}
+          </li>
+        ))
+      }
+    </ul>
+  </body>
+</html>

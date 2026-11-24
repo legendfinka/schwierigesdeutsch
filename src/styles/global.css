@@ -1,0 +1,42 @@
+:root {
+  --gender-m: #1d5fbf;
+  --gender-f: #c0262d;
+  --gender-n: #2a7d3f;
+  --gender-pl: #6b5b95;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+  margin: 0 auto;
+  max-width: 40rem;
+  padding: 1rem;
+}
+
+.noun-list {
+  list-style: none;
+  padding: 0;
+}
+
+.noun-list li {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  min-height: 44px;
+}
+
+.article {
+  font-weight: 700;
+}
+
+/* Dev only: unverified content never reaches a production build. */
+.badge-unreviewed {
+  border: 1px dashed currentColor;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  padding: 0 0.35rem;
+}
+
+.gender-m { color: var(--gender-m); }
+.gender-f { color: var(--gender-f); }
+.gender-n { color: var(--gender-n); }
