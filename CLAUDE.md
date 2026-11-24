@@ -145,10 +145,9 @@ works in memory and says "progress won't be saved" (`store.persistent` is false)
 
 ## Roadmap
 
-Done: scaffold · verification · content checks · design and layout · storage.
+Done: scaffold · verification · content checks · design and layout · storage · SRS
+(`src/lib/srs.ts`: SM-2, wrong cards return in 10 minutes, `nextItems()` builds the queue).
 
-5. **SRS**: `src/lib/srs.ts` (SM-2), pure and tested. Keep values inside the storage
-   limits (ease 1.3–5, whole-number `due`), or storage drops the card.
 6. **Noun trainer** on `/nouns`: article, then plural, with SRS and a "why" per card. Add
    the "progress won't be saved" note and a "Report a mistake" link (email or issue).
 7. **Answer checking**: `src/lib/grading.ts`, tested.
