@@ -1,14 +1,9 @@
-/*
- * Design tokens + base styles. Warm, autumn-like, cozy: paper background, brown ink,
- * caramel/rust accents, muted autumn gender colors. Every text color here is tested
- * for WCAG AA contrast in both themes (tests/design-tokens.test.ts): only use #rrggbb
- * values for color tokens so the test can read them.
- */
+/* Colors are contrast-tested in tests/design-tokens.test.ts. Use #rrggbb only. */
 
 :root {
   color-scheme: light dark;
 
-  /* Light theme: paper and brown ink */
+  /* Light */
   --bg: #fbf5ea;
   --surface: #fffaf2;
   --surface-sunk: #f3e8d6;
@@ -19,7 +14,7 @@
   --accent-soft: #f1dcb8;
   --focus: #b4541f;
 
-  /* Gender colors: same meaning everywhere, always shown with the article text */
+  /* Genders */
   --gender-m: #3a5a8c; /* dusk blue */
   --gender-f: #a63a2e; /* brick red */
   --gender-n: #4a6b2a; /* moss green */
@@ -43,7 +38,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Dark theme: warm charcoal-brown, cream text */
+    /* Dark */
     --bg: #221a14;
     --surface: #2d231b;
     --surface-sunk: #1b140f;
@@ -63,7 +58,7 @@
   }
 }
 
-/* ------------------------------------------------------------------ base */
+/* Base */
 
 *,
 *::before,
@@ -128,7 +123,7 @@ a:hover {
   }
 }
 
-/* --------------------------------------------------------------- helpers */
+/* Helpers */
 
 .visually-hidden {
   position: absolute;
@@ -159,7 +154,7 @@ a:hover {
   color: var(--text-muted);
 }
 
-/* ---------------------------------------------------------------- cards */
+/* Cards */
 
 .card {
   background: var(--surface);
@@ -189,7 +184,7 @@ a.card:hover {
   border-color: var(--accent);
 }
 
-/* --------------------------------------------------------------- badges */
+/* Badges */
 
 .badge {
   display: inline-block;
@@ -203,13 +198,12 @@ a.card:hover {
   vertical-align: middle;
 }
 
-/* Content (or a part of it) that no source has confirmed yet */
+/* Whole entry not reviewed (dev only) */
 .badge--unverified {
   border-style: dashed;
 }
 
-/* A single part of an entry (e.g. a translation) that no source has confirmed yet.
-   Quiet on purpose; always pair with a legend and screen-reader text. */
+/* One unconfirmed part, e.g. a translation. Add a legend and screen-reader text. */
 .unverified {
   text-decoration-line: underline;
   text-decoration-style: dotted;
@@ -218,7 +212,7 @@ a.card:hover {
   text-underline-offset: 0.25em;
 }
 
-/* ------------------------------------------------------------- genders */
+/* Genders */
 
 .gender-m { color: var(--gender-m); }
 .gender-f { color: var(--gender-f); }

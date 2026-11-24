@@ -125,7 +125,6 @@ describe('plural-only and singular-only nouns', () => {
 
 describe('old fields', () => {
   it('rejects leftover needsReview', () => {
-    // Strict schemas catch typos and fields from the old format.
     expect(NounSchema.safeParse({ ...nounFixture(), needsReview: false }).success).toBe(false);
   });
   it('requires a known topic', () => {

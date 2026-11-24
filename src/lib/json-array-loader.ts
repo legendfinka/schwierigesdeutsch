@@ -6,14 +6,10 @@ import { fileURLToPath } from 'node:url';
 import { collectEntries, type RawFile } from './json-entries';
 
 type WatchHandler = (event: string, changed: string) => void;
-/** One watcher handler per folder, so reloading the loader never stacks listeners. */
+// One handler per folder, so reloads don't stack listeners.
 const handlers = new Map<string, WatchHandler>();
 
-/**
- * Loads every `*.json` file in a folder. Each file holds one entry or an array
- * of entries; every entry needs a unique string `id`. Lets content be grouped
- * by topic (e.g. quizzes/cases-dative.json) in one consistent format.
- */
+// Loads all .json files in a folder. A file holds one entry or a list.
 export function jsonDir(dir: string): Loader {
   return {
     name: 'json-dir',
@@ -24,7 +20,7 @@ export function jsonDir(dir: string): Loader {
         const files: RawFile[] = [];
         if (existsSync(base)) {
           for (const file of (await readdir(base)).filter((f) => f.endsWith('.json')).sort()) {
-            const text = await readFile(join(base, file), 'utf8'); // I/O errors surface as they are
+            const text = await readFile(join(base, file), 'utf8');
             try {
               files.push({ file, raw: JSON.parse(text) });
             } catch (cause) {
@@ -35,14 +31,14 @@ export function jsonDir(dir: string): Loader {
         const entries = collectEntries(dir, files);
         store.clear();
         for (const { id, item, file } of entries) {
-          const filePath = join(dir, file); // Astro wants paths relative to the root
+          const filePath = join(dir, file); // Astro wants it relative
           const data = await parseData({ id, data: item, filePath });
           store.set({ id, data, filePath });
         }
         if (files.length === 0) logger.info(`no files in ${dir}`);
       };
 
-      // Run syncs one after another so overlapping file events can't leave stale data.
+      // One sync at a time, so fast edits can't leave stale data.
       let queue: Promise<void> = Promise.resolve();
       const sync = () => (queue = queue.catch(() => undefined).then(doSync));
 

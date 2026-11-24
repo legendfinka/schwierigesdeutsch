@@ -1,4 +1,4 @@
-/** Noun topics, in the order they appear on the site. Add new ones here. */
+// In page order.
 export const TOPICS = [
   { id: 'people', label: 'Family & people' },
   { id: 'food', label: 'Food & drink' },
@@ -13,7 +13,7 @@ export type TopicId = Topic['id'];
 
 export const TOPIC_IDS = TOPICS.map((t) => t.id) as [TopicId, ...TopicId[]];
 
-/** Groups items by topic in TOPICS order (empty topics left out), A–Z inside each. */
+// Skips empty topics, sorts A–Z inside each.
 export function groupByTopic<T extends { topic: TopicId; noun: string }>(
   items: readonly T[],
 ): Array<{ topic: Topic; items: T[] }> {

@@ -16,7 +16,7 @@ const {
 const SITE_NAME = 'Schwieriges Deutsch';
 const fullTitle = title ? `${title} · ${SITE_NAME}` : SITE_NAME;
 
-// Only pages that exist. Upcoming sections are listed on the home page instead.
+// Only pages that exist.
 const nav = [
   { href: url('/'), label: 'Home' },
   { href: url('/nouns/'), label: 'Nouns' },
@@ -139,7 +139,7 @@ const isCurrent = (href: string) =>
     color: var(--accent);
   }
 
-  /* der / die / das: a quiet nod to what the site teaches */
+  /* der / die / das */
   .brand__stripe {
     width: 4.5rem;
     height: 3px;

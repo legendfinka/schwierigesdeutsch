@@ -1,11 +1,7 @@
 export type RawFile = { file: string; raw: unknown };
 export type RawEntry = { id: string; item: Record<string, unknown>; file: string };
 
-/**
- * Flattens parsed JSON files (each one entry or an array of entries) into a list,
- * checking that every entry is an object with a unique string `id`.
- * Pure, so it can be tested without Astro.
- */
+// Flattens files into entries. Each needs a unique string id.
 export function collectEntries(dir: string, files: RawFile[]): RawEntry[] {
   const seen = new Map<string, string>();
   const out: RawEntry[] = [];

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Same drawing as src/components/Logo.astro: open book with an acorn -->
+  <!-- Same as src/components/Logo.astro -->
   <rect x="1" y="1" width="30" height="30" rx="8" fill="#b4541f"/>
   <path d="M16 10.2C13 8.6 9.6 8.4 6.4 9.2V23.6C9.6 22.8 13 23 16 24.6Z" fill="#fffaf2"/>
   <path d="M16 10.2C19 8.6 22.4 8.4 25.6 9.2V23.6C22.4 22.8 19 23 16 24.6Z" fill="#fffaf2"/>

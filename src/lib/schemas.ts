@@ -3,7 +3,7 @@ import { exampleUsesNoun } from './german-text';
 import { TOPIC_IDS } from './topics';
 
 export const LEVELS = ['A1', 'A2', 'B1', 'B2'] as const;
-/** m/f/n for singular nouns; pl only for plural-only nouns (die Leute). */
+// pl = plural-only nouns (die Leute).
 export const GENDERS = ['m', 'f', 'n', 'pl'] as const;
 export const CASES = ['nom', 'acc', 'dat', 'gen'] as const;
 export const ROLES = [
@@ -21,12 +21,9 @@ export const Gender = z.enum(GENDERS);
 export const Case = z.enum(CASES);
 export const Role = z.enum(ROLES);
 
-/** Text in one or more languages. Only English for now; add keys later. */
+// English only for now.
 export const LocalizedText = z.object({ en: z.string().min(1) });
 
-// ---------------------------------------------------------- Verification
-
-/** Sources accepted for verifying content (see CLAUDE.md, "When adding content"). */
 export const SOURCES = [
   'duden',
   'duden-mentor',
@@ -40,10 +37,7 @@ export const SOURCES = [
   'native-speaker',
 ] as const;
 
-/**
- * What a verification covered. Content may only be presented as verified for the
- * parts listed here (see visibility.ts for what production requires).
- */
+// Which parts the sources really confirmed.
 export const CHECKABLE = [
   'gender',
   'plural',
@@ -59,10 +53,7 @@ const isRealDate = (s: string) => {
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
 };
 
-/**
- * Who confirmed an entry, and when. Absent = unverified (hidden in production).
- * Needs at least two sources (majority rule), or a native speaker.
- */
+// Missing = unverified. Needs 2+ sources or a native speaker.
 export const Verified = z
   .object({
     sources: z.array(z.enum(SOURCES)).min(1),
@@ -90,20 +81,15 @@ export const Verified = z
     }
   });
 
-// ---------------------------------------------------------------- Noun
-
 export const NounSchema = z
   .object({
     id: z.string().regex(/^[a-z0-9-]+$/, 'id must be lowercase ascii, digits, dashes'),
     noun: z.string().min(1),
     gender: Gender,
     plural: z.string().min(1).nullable(),
-    /** Only exists in the plural (die Leute): gender "pl", plural equals the noun. */
-    pluralOnly: z.boolean().optional(),
-    /** Has no plural (das Wasser, die Milch): plural must be null. */
-    singularOnly: z.boolean().optional(),
+    pluralOnly: z.boolean().optional(), // die Leute
+    singularOnly: z.boolean().optional(), // das Wasser
     level: Level,
-    /** Groups nouns on the site; ids and labels live in topics.ts. */
     topic: z.enum(TOPIC_IDS),
     translation: LocalizedText,
     example: z.string().min(1),
@@ -130,8 +116,6 @@ export const NounSchema = z
     if (n.plural === null && !n.singularOnly) {
       issue('singularOnly', '"plural": null requires "singularOnly": true');
     }
-    // Whole words only; genitive -s/-es and dative plural -n only after the right
-    // determiner (see german-text.ts). "Ei" must not match "Ich esse Eis."
     if (!exampleUsesNoun(n.example, n.noun, n.plural)) {
       ctx.addIssue({
         code: 'custom',
@@ -141,13 +125,10 @@ export const NounSchema = z
     }
   });
 
-// ---------------------------------------------------------------- Quiz
-
 export const QuizQuestionSchema = z
   .object({
     id: z.string().regex(/^[a-z0-9-]+$/),
     topic: z.string().min(1),
-    /** "gap": fill the ___ in the prompt. "question": a plain question. */
     kind: z.enum(['gap', 'question']).default('gap'),
     level: Level,
     prompt: z.string().min(1),
@@ -178,8 +159,6 @@ export const QuizQuestionSchema = z
       ctx.addIssue({ code: 'custom', path: ['kind'], message: 'prompt has ___, use kind "gap"' });
     }
   });
-
-// ------------------------------------------------------------ Sentence
 
 export const SentencePartSchema = z
   .object({

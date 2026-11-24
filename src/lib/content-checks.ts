@@ -1,33 +1,21 @@
-/**
- * Extra content checks that a schema can't express. Pure functions, used by
- * tests/content.test.ts. Each returns a list of problems (empty = fine).
- */
+// Content checks a schema can't express. Each returns a list of problems.
 import { ARTICLES, CONTRACTIONS, DETERMINERS, leadingDeterminer, words } from './german-text';
 
 type Gender = 'm' | 'f' | 'n' | 'pl';
 
-/**
- * Article forms that can never stand directly before a SINGULAR noun of this gender,
- * in any case. E.g. "das" never goes with a masculine noun, but "der" can go with a
- * feminine one (dative/genitive: "der Frau"), so that is not flagged.
- */
+// Articles that never fit a singular noun of this gender, in any case.
+// "der Frau" is fine (dative), so "der" isn't listed for f.
 const IMPOSSIBLE: Record<Exclude<Gender, 'pl'>, ReadonlySet<string>> = {
   m: new Set(['die', 'das', 'eine', 'einer']),
   f: new Set(['das', 'den', 'dem', 'des', 'ein', 'einen', 'einem', 'eines']),
   n: new Set(['der', 'die', 'den', 'eine', 'einer', 'einen']),
 };
 
-/** Options meaning "no article" (neutral in quiz options). */
+// "No article" options in quizzes.
 const NO_ARTICLE = new Set(['–', '—', '-', '∅', '(none)']);
 
-/**
- * Finds the singular noun in its example sentence and checks the article in front of
- * it (directly, or before up to three adjectives: "die kleine rote Lampe"). Flags only
- * combinations that are wrong in every case, so it never rejects a correct sentence.
- * Heuristic: when the structure is unclear (a capitalized word or a verb in the way)
- * it checks nothing. Known limit: an unlisted adverb ending in -e between article and
- * noun can cause a false alarm; reword the example if that happens.
- */
+// Checks the article before the noun in its example. Skips anything unclear.
+// An unlisted -e adverb can cause a false alarm: reword the example.
 export function checkExampleArticle(n: {
   noun: string;
   gender: Gender;
@@ -35,7 +23,7 @@ export function checkExampleArticle(n: {
   pluralOnly?: boolean;
   example: string;
 }): string[] {
-  // Same form in singular and plural (der Lehrer / die Lehrer): can't tell which is used.
+  // der Lehrer / die Lehrer: can't tell which one is meant.
   if (n.gender === 'pl' || n.pluralOnly || n.plural === n.noun) return [];
   const gender = n.gender;
 
@@ -51,10 +39,7 @@ export function checkExampleArticle(n: {
   return problems;
 }
 
-/**
- * Example sentences start with a capital letter and end with . ! ? or …
- * (closing quotes and brackets after the punctuation are fine).
- */
+// Capital first letter, ends with . ! ? or … (closing quotes allowed).
 export function checkSentenceShape(s: string): string[] {
   const problems: string[] = [];
   const text = s.trim();
@@ -67,10 +52,7 @@ export function checkSentenceShape(s: string): string[] {
   return problems;
 }
 
-/**
- * If any quiz option is a real article (or a contraction like zum), every option must be
- * an article-like word or a "no article" dash. Quizzes without articles are not checked.
- */
+// If one option is an article, all must be.
 export function checkOptionTypes(options: string[]): string[] {
   const lower = (o: string) => o.toLowerCase();
   const hasArticle = options.some((o) => ARTICLES.has(lower(o)) || CONTRACTIONS.has(lower(o)));
@@ -82,7 +64,7 @@ export function checkOptionTypes(options: string[]): string[] {
   return odd.length > 0 ? [`mixes articles with other options: ${odd.join(', ')}`] : [];
 }
 
-/** ASCII id from a German word: Tür → tuer, Straße → strasse, Café → cafe. (Ids only.) */
+// Tür → tuer, Straße → strasse, Café → cafe. For ids only.
 export function slugify(word: string): string {
   return word
     .toLowerCase()
@@ -91,19 +73,18 @@ export function slugify(word: string): string {
     .replace(/ü/g, 'ue')
     .replace(/ß/g, 'ss')
     .normalize('NFD')
-    .replace(/\p{M}+/gu, '') // other accents: é → e
+    .replace(/\p{M}+/gu, '') // é → e
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 }
 
-/** Noun id is the slug of the noun, optionally with a suffix for homonyms (see-m). */
+// Suffix allowed for homonyms: see-m.
 export function checkNounId(n: { id: string; noun: string }): string[] {
   const slug = slugify(n.noun);
   if (n.id === slug || n.id.startsWith(`${slug}-`)) return [];
   return [`id "${n.id}" should be "${slug}" (or "${slug}-…")`];
 }
 
-/** Singular and plural both start with a capital letter. */
 export function checkCapitalized(n: { noun: string; plural: string | null }): string[] {
   const cap = (s: string) => s[0] !== undefined && s[0] === s[0].toUpperCase();
   const problems: string[] = [];
@@ -112,10 +93,7 @@ export function checkCapitalized(n: { noun: string; plural: string | null }): st
   return problems;
 }
 
-/**
- * The same entry must not appear twice. Homonyms (die Bank = bench / bank) are fine when
- * their plural or translation differs.
- */
+// Homonyms like die Bank (bench / bank) are fine if plural or translation differ.
 export function findDuplicateNouns(
   nouns: Array<{
     id: string;
@@ -136,7 +114,7 @@ export function findDuplicateNouns(
   return problems;
 }
 
-/** A genderRule must name an existing grammar page (src/content/grammar/<id>.md). */
+// Must match src/content/grammar/<id>.md.
 export function checkGenderRule(rule: string | null, ruleIds: ReadonlySet<string>): string[] {
   if (rule === null || ruleIds.has(rule)) return [];
   return [`genderRule "${rule}" has no page src/content/grammar/${rule}.md`];

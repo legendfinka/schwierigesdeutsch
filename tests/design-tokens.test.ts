@@ -2,11 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-/**
- * Reads the color tokens from global.css (light = first :root, dark = the
- * prefers-color-scheme: dark block) and checks WCAG contrast for every text color
- * on every background, in both themes.
- */
+// WCAG contrast for every text color on every background, light and dark.
 const css = readFileSync(join(__dirname, '..', 'src', 'styles', 'global.css'), 'utf8');
 const [lightPart, darkPart] = css.split('@media (prefers-color-scheme: dark)');
 
@@ -55,7 +51,7 @@ describe.each([
     const fails: string[] = [];
     for (const fg of TEXT) {
       for (const bg of [...BACKGROUNDS, 'accent-soft']) {
-        // accent-soft is only used behind the current nav item (text color)
+        // accent-soft only sits behind nav text
         if (bg === 'accent-soft' && fg !== 'text') continue;
         const ratio = contrast(t[fg]!, t[bg]!);
         if (ratio < 4.5) fails.push(`--${fg} on --${bg}: ${ratio.toFixed(2)}`);
@@ -71,8 +67,6 @@ describe.each([
   });
 
   it('each gender has its own color', () => {
-    // Color is never the only signal (article text is always shown); this just
-    // guards against two genders accidentally getting the same color.
     const g = ['gender-m', 'gender-f', 'gender-n', 'gender-pl'].map((k) => t[k]);
     expect(new Set(g).size).toBe(4);
   });

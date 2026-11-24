@@ -24,7 +24,6 @@ const CONTENT = join(__dirname, '..', 'src', 'content');
 
 type Entry = { file: string; data: Record<string, unknown> };
 
-/** Load every entry from all JSON files in a content folder (empty folder = no entries). */
 function load(dir: string): Entry[] {
   const path = join(CONTENT, dir);
   if (!existsSync(path)) return [];
@@ -43,11 +42,11 @@ const collections: Array<[string, ZodTypeAny]> = [
   ['sentences', AnnotatedSentenceSchema],
 ];
 
-// Common ASCII substitutes for umlauts / ß. A safety net, not a full spell check.
+// Safety net, not a spell check.
 const SUBSTITUTES =
   /\b(Maenner|Haeuser|Buecher|Aepfel|Kueche|Schueler|Muetter|Vaeter|fuer|ueber|Strasse|Fuesse|Gruesse)\b/i;
 
-/** Learner-facing content only: ids are ASCII on purpose, `verified` is meta data. */
+// Ids are ASCII on purpose; verified is meta data.
 const visibleText = (data: Record<string, unknown>) =>
   JSON.stringify({ ...data, id: undefined, verified: undefined });
 
@@ -77,7 +76,7 @@ describe.each(collections)('content/%s', (dir, schema) => {
   });
 });
 
-/** Parse entries that pass the schema (schema failures are reported above). */
+// Schema failures are reported above.
 function parsed<T>(dir: string, schema: { safeParse: (d: unknown) => { success: boolean; data?: T } }) {
   return load(dir).flatMap(({ file, data }) => {
     const r = schema.safeParse(data);
@@ -85,7 +84,6 @@ function parsed<T>(dir: string, schema: { safeParse: (d: unknown) => { success: 
   });
 }
 
-/** Rule ids = Markdown files in src/content/grammar. */
 const GRAMMAR = join(CONTENT, 'grammar');
 const ruleIds = new Set(
   existsSync(GRAMMAR)
