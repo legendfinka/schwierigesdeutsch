@@ -81,6 +81,15 @@ export const Verified = z
     }
   });
 
+type Checkable = (typeof CHECKABLE)[number];
+
+// Only parts that exist for this kind of entry, so a typo can't count as checked.
+const verifiedFor = (allowed: readonly Checkable[]) =>
+  Verified.refine((v) => v.checked.every((c) => allowed.includes(c)), {
+    message: `checked may only list: ${allowed.join(', ')}`,
+    path: ['checked'],
+  });
+
 export const NounSchema = z
   .object({
     id: z.string().regex(/^[a-z0-9-]+$/, 'id must be lowercase ascii, digits, dashes'),
@@ -94,7 +103,7 @@ export const NounSchema = z
     translation: LocalizedText,
     example: z.string().min(1),
     genderRule: z.string().min(1).nullable(),
-    verified: Verified.optional(),
+    verified: verifiedFor(['gender', 'plural', 'translation', 'example']).optional(),
   })
   .strict()
   .superRefine((n, ctx) => {
@@ -136,7 +145,7 @@ export const QuizQuestionSchema = z
     answer: z.string().min(1),
     explanation: LocalizedText,
     hint: LocalizedText.optional(),
-    verified: Verified.optional(),
+    verified: verifiedFor(['answer', 'explanation']).optional(),
   })
   .strict()
   .superRefine((q, ctx) => {
@@ -181,7 +190,7 @@ export const AnnotatedSentenceSchema = z
     text: z.string().min(1),
     translation: LocalizedText,
     parts: z.array(SentencePartSchema).min(1),
-    verified: Verified.optional(),
+    verified: verifiedFor(['roles', 'translation']).optional(),
   })
   .strict()
   .superRefine((s, ctx) => {

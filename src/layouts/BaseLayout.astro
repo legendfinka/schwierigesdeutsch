@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { url } from '../lib/url';
+import { isCurrentPath } from '../lib/nav';
 import Logo from '../components/Logo.astro';
 
 interface Props {
@@ -22,9 +23,7 @@ const nav = [
   { href: url('/nouns/'), label: 'Nouns' },
 ];
 
-const here = Astro.url.pathname;
-const isCurrent = (href: string) =>
-  href === here || (href !== url('/') && here.startsWith(href));
+const isCurrent = (href: string) => isCurrentPath(href, Astro.url.pathname, url('/'));
 ---
 
 <!doctype html>

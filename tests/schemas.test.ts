@@ -127,6 +127,15 @@ describe('old fields', () => {
   it('rejects leftover needsReview', () => {
     expect(NounSchema.safeParse({ ...nounFixture(), needsReview: false }).success).toBe(false);
   });
+  it('checked may only list parts that exist for the entry type', () => {
+    const v = { sources: ['duden', 'dwds'], date: '2026-11-24' };
+    expect(NounSchema.safeParse({ ...nounFixture(), verified: { ...v, checked: ['answer'] } }).success).toBe(false);
+    expect(NounSchema.safeParse({ ...nounFixture(), verified: { ...v, checked: ['example'] } }).success).toBe(true);
+    expect(QuizQuestionSchema.safeParse({ ...quiz, verified: { ...v, checked: ['gender'] } }).success).toBe(false);
+    expect(QuizQuestionSchema.safeParse({ ...quiz, verified: { ...v, checked: ['answer'] } }).success).toBe(true);
+    expect(AnnotatedSentenceSchema.safeParse({ ...sentence, verified: { ...v, checked: ['plural'] } }).success).toBe(false);
+    expect(AnnotatedSentenceSchema.safeParse({ ...sentence, verified: { ...v, checked: ['roles'] } }).success).toBe(true);
+  });
   it('requires a known topic', () => {
     const { topic: _omit, ...without } = nounFixture();
     expect(NounSchema.safeParse(without).success).toBe(false);
