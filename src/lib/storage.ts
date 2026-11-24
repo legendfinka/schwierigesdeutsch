@@ -22,7 +22,12 @@ export const QuizResultSchema = z.object({
 // New settings need defaults, or old data breaks.
 export const SettingsSchema = z.object({});
 
-const ItemId = z.string().min(1).max(200);
+const UNSAFE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+const ItemId = z
+  .string()
+  .min(1)
+  .max(200)
+  .refine((k) => !UNSAFE_KEYS.has(k));
 
 export const ProgressSchema = z.object({
   version: z.literal(CURRENT_VERSION),
@@ -74,9 +79,6 @@ export interface LoadResult {
 const isPlainObject = (v: unknown): v is Data =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
-const UNSAFE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
-
-// Keep good entries, count bad ones.
 function salvage<T>(value: unknown, schema: z.ZodType<T>): { entries: Record<string, T>; dropped: number } {
   if (value === undefined) return { entries: {}, dropped: 0 };
   if (!isPlainObject(value)) return { entries: {}, dropped: 1 };
@@ -84,13 +86,41 @@ function salvage<T>(value: unknown, schema: z.ZodType<T>): { entries: Record<str
   const kept: Array<[string, T]> = [];
   for (const [key, entry] of Object.entries(value)) {
     const parsed = schema.safeParse(entry);
-    if (UNSAFE_KEYS.has(key) || !ItemId.safeParse(key).success || !parsed.success) {
+    if (!ItemId.safeParse(key).success || !parsed.success) {
       dropped++;
       continue;
     }
     kept.push([key, parsed.data]);
   }
   return { entries: Object.fromEntries(kept), dropped };
+}
+
+// Same rules for load and save, so a save can never write what a load would drop.
+function normalize(data: Data): { progress: Progress; dropped: number } {
+  const srs = salvage(data.srs, SrsStateSchema);
+  const quiz = salvage(data.quiz, QuizResultSchema);
+  const settings = SettingsSchema.safeParse(data.settings ?? {});
+  return {
+    progress: {
+      version: CURRENT_VERSION,
+      srs: srs.entries,
+      quiz: quiz.entries,
+      settings: settings.success ? settings.data : {},
+    },
+    dropped: srs.dropped + quiz.dropped + (settings.success ? 0 : 1),
+  };
+}
+
+function isNewerVersion(raw: string | null): boolean {
+  if (!raw) return false;
+  try {
+    const data: unknown = JSON.parse(raw);
+    return (
+      isPlainObject(data) && Number.isInteger(data.version) && (data.version as number) > CURRENT_VERSION
+    );
+  } catch {
+    return false;
+  }
 }
 
 // Never throws.
@@ -117,21 +147,8 @@ export function parseProgress(raw: string | null): LoadResult {
     return reset();
   }
 
-  const srs = salvage(current.srs, SrsStateSchema);
-  const quiz = salvage(current.quiz, QuizResultSchema);
-  const settings = SettingsSchema.safeParse(current.settings ?? {});
-  const dropped = srs.dropped + quiz.dropped + (settings.success ? 0 : 1);
-
-  return {
-    progress: {
-      version: CURRENT_VERSION,
-      srs: srs.entries,
-      quiz: quiz.entries,
-      settings: settings.success ? settings.data : {},
-    },
-    status: dropped > 0 ? 'repaired' : 'ok',
-    dropped,
-  };
+  const { progress, dropped } = normalize(current);
+  return { progress, status: dropped > 0 ? 'repaired' : 'ok', dropped };
 }
 
 export interface KV {
@@ -165,26 +182,37 @@ export function detectStorage(scope: object = globalThis): KV | null {
 }
 
 export type SaveResult =
-  | { ok: true }
+  | { ok: true; dropped: number }
   | { ok: false; reason: 'newer-version' | 'invalid' | 'quota' | 'unavailable' };
 
 export interface Store {
   readonly persistent: boolean; // false = memory only, lost on close
+  readonly outdated: boolean; // a newer site version owns the saved data
   load(): LoadResult;
   save(progress: Progress): SaveResult;
   update(change: (progress: Progress) => Progress | void): SaveResult & { progress: Progress };
   reset(): SaveResult;
 }
 
-const isQuotaError = (e: unknown): boolean =>
-  e instanceof Error &&
-  (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED');
+// Old browsers only set the legacy codes.
+const isQuotaError = (e: unknown): boolean => {
+  if (typeof e !== 'object' || e === null) return false;
+  const { name, code } = e as { name?: unknown; code?: unknown };
+  return (
+    name === 'QuotaExceededError' ||
+    name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+    code === 22 ||
+    code === 1014
+  );
+};
 
 export function createStore(kv: KV | null = detectStorage(), key: string = STORAGE_KEY): Store {
+  const backupKey = `${key}:backup`;
   let backend: KV = kv ?? memoryKV();
   let persistent = kv !== null;
-  let readOnly = false;
+  let outdated = false;
 
+  // Later writes go to memory, so the session still works.
   const fallBackToMemory = () => {
     backend = memoryKV();
     persistent = false;
@@ -199,38 +227,59 @@ export function createStore(kv: KV | null = detectStorage(), key: string = STORA
     }
   };
 
+  // Another tab may have saved a newer version at any time, so check before each write.
+  const checkNewer = (raw: string | null = persistent ? read(key) : null) => {
+    if (!outdated && persistent && isNewerVersion(raw)) {
+      outdated = true;
+      fallBackToMemory();
+    }
+  };
+
+  const keepBackup = (raw: string) => {
+    try {
+      if (backend.getItem(backupKey) !== raw) backend.setItem(backupKey, raw);
+    } catch {
+      // No room for a backup.
+    }
+  };
+
   const store: Store = {
     get persistent() {
       return persistent;
+    },
+    get outdated() {
+      return outdated;
     },
 
     load() {
       const raw = read(key);
       const result = parseProgress(raw);
-      readOnly = result.status === 'newer';
-      if (result.status === 'reset' && raw !== null) {
-        try {
-          backend.setItem(key === STORAGE_KEY ? BACKUP_KEY : `${key}:backup`, raw);
-        } catch {
-          // No room for a backup.
-        }
+      if (result.status === 'newer') {
+        checkNewer(raw);
+        return result;
+      }
+      if ((result.status === 'reset' || result.status === 'repaired') && raw !== null) {
+        keepBackup(raw);
       }
       return result;
     },
 
     save(progress) {
-      if (readOnly) return { ok: false, reason: 'newer-version' };
-      const valid = ProgressSchema.safeParse(progress);
-      if (!valid.success) return { ok: false, reason: 'invalid' };
-      try {
-        backend.setItem(key, JSON.stringify(valid.data));
-        return { ok: true };
-      } catch (e) {
-        if (isQuotaError(e)) return { ok: false, reason: 'quota' };
-        fallBackToMemory();
-        backend.setItem(key, JSON.stringify(valid.data));
-        return { ok: false, reason: 'unavailable' };
+      checkNewer();
+      if (!isPlainObject(progress) || progress.version !== CURRENT_VERSION) {
+        return { ok: false, reason: 'invalid' };
       }
+      const { progress: clean, dropped } = normalize(progress);
+      const text = JSON.stringify(clean);
+      try {
+        backend.setItem(key, text);
+      } catch (e) {
+        fallBackToMemory();
+        backend.setItem(key, text);
+        return { ok: false, reason: isQuotaError(e) ? 'quota' : 'unavailable' };
+      }
+      if (outdated) return { ok: false, reason: 'newer-version' };
+      return { ok: true, dropped };
     },
 
     update(change) {
@@ -240,14 +289,14 @@ export function createStore(kv: KV | null = detectStorage(), key: string = STORA
     },
 
     reset() {
-      if (readOnly) return { ok: false, reason: 'newer-version' };
+      checkNewer();
       try {
         backend.removeItem(key);
-        return { ok: true };
       } catch {
         fallBackToMemory();
         return { ok: false, reason: 'unavailable' };
       }
+      return outdated ? { ok: false, reason: 'newer-version' } : { ok: true, dropped: 0 };
     },
   };
   return store;

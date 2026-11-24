@@ -153,7 +153,7 @@ describe('createStore', () => {
     const store = createStore(memoryKV());
     expect(store.persistent).toBe(true);
     expect(store.load().status).toBe('empty');
-    expect(store.save(sample())).toEqual({ ok: true });
+    expect(store.save(sample())).toEqual({ ok: true, dropped: 0 });
     expect(store.load()).toEqual({ progress: sample(), status: 'ok', dropped: 0 });
   });
 
@@ -168,13 +168,29 @@ describe('createStore', () => {
     expect(Object.keys(store.load().progress.quiz)).toEqual(['q1']);
   });
 
-  it('refuses to save invalid progress and keeps the old data', () => {
-    const kv = memoryKV();
-    const store = createStore(kv);
-    store.save(sample());
-    const bad = { ...sample(), srs: { x: { ...card, ease: 0 } } };
-    expect(store.save(bad)).toEqual({ ok: false, reason: 'invalid' });
+  it('one bad card is dropped, the rest is still saved', () => {
+    const store = createStore(memoryKV());
+    const p = sample();
+    p.srs['noun:bad'] = { ...card, ease: 9 };
+    expect(store.save(p)).toEqual({ ok: true, dropped: 1 });
     expect(store.load().progress).toEqual(sample());
+  });
+
+  it('refuses progress that is not progress at all', () => {
+    const store = createStore(memoryKV());
+    expect(store.save({ ...sample(), version: 7 } as unknown as Progress)).toEqual({
+      ok: false,
+      reason: 'invalid',
+    });
+    expect(store.save(null as unknown as Progress)).toEqual({ ok: false, reason: 'invalid' });
+  });
+
+  it('save drops the same unsafe keys load would drop', () => {
+    const store = createStore(memoryKV());
+    const p = sample();
+    p.srs['constructor'] = { ...card };
+    expect(store.save(p)).toEqual({ ok: true, dropped: 1 });
+    expect(store.load()).toEqual({ progress: sample(), status: 'ok', dropped: 0 });
   });
 
   it('keeps a backup of unreadable data before it gets overwritten', () => {
@@ -187,21 +203,75 @@ describe('createStore', () => {
     expect(kv.getItem(BACKUP_KEY)).toBe('{broken');
   });
 
-  it('never overwrites data from a newer version', () => {
+  it('keeps a backup when repairing drops entries', () => {
+    const kv = memoryKV();
+    const damaged = raw({ ...sample(), srs: [1, 2] });
+    kv.setItem(STORAGE_KEY, damaged);
+    const store = createStore(kv);
+    expect(store.load().status).toBe('repaired');
+    expect(kv.getItem(BACKUP_KEY)).toBe(damaged);
+  });
+
+  it('does not rewrite an unchanged backup on every load', () => {
+    const kv = memoryKV();
+    kv.setItem(STORAGE_KEY, '{broken');
+    let writes = 0;
+    const counting: KV = {
+      getItem: (k) => kv.getItem(k),
+      setItem: (k, v) => {
+        if (k === BACKUP_KEY) writes++;
+        kv.setItem(k, v);
+      },
+      removeItem: (k) => kv.removeItem(k),
+    };
+    const store = createStore(counting);
+    store.load();
+    store.load();
+    store.load();
+    expect(writes).toBe(1);
+  });
+
+  it('never overwrites data from a newer version, but the session still works', () => {
     const kv = memoryKV();
     const newer = raw({ version: CURRENT_VERSION + 1, srs: {}, future: true });
     kv.setItem(STORAGE_KEY, newer);
     const store = createStore(kv);
     expect(store.load().status).toBe('newer');
+    expect(store.outdated).toBe(true);
+    expect(store.persistent).toBe(false);
     expect(store.save(sample())).toEqual({ ok: false, reason: 'newer-version' });
+    store.update((p) => {
+      p.srs['noun:kind'] = { ...card };
+    });
+    expect(Object.keys(store.load().progress.srs).sort()).toEqual(['noun:kind', 'noun:tisch']);
     expect(store.reset()).toEqual({ ok: false, reason: 'newer-version' });
+    expect(kv.getItem(STORAGE_KEY)).toBe(newer);
+  });
+
+  it('save or reset before any load still never touches newer data', () => {
+    const kv = memoryKV();
+    const newer = raw({ version: CURRENT_VERSION + 1 });
+    kv.setItem(STORAGE_KEY, newer);
+    expect(createStore(kv).save(sample())).toEqual({ ok: false, reason: 'newer-version' });
+    expect(createStore(kv).reset()).toEqual({ ok: false, reason: 'newer-version' });
+    expect(kv.getItem(STORAGE_KEY)).toBe(newer);
+  });
+
+  it('notices a newer version saved by another tab mid-session', () => {
+    const kv = memoryKV();
+    const store = createStore(kv);
+    store.load();
+    expect(store.save(sample())).toEqual({ ok: true, dropped: 0 });
+    const newer = raw({ version: CURRENT_VERSION + 1 });
+    kv.setItem(STORAGE_KEY, newer);
+    expect(store.save(sample())).toEqual({ ok: false, reason: 'newer-version' });
     expect(kv.getItem(STORAGE_KEY)).toBe(newer);
   });
 
   it('works in memory when no storage is available', () => {
     const store = createStore(null);
     expect(store.persistent).toBe(false);
-    expect(store.save(sample())).toEqual({ ok: true });
+    expect(store.save(sample())).toEqual({ ok: true, dropped: 0 });
     expect(store.load().progress).toEqual(sample());
   });
 
@@ -209,27 +279,48 @@ describe('createStore', () => {
     const store = createStore(flakyKV({ get: named('SecurityError') }));
     expect(store.load().status).toBe('empty');
     expect(store.persistent).toBe(false);
-    expect(store.save(sample())).toEqual({ ok: true });
+    expect(store.save(sample())).toEqual({ ok: true, dropped: 0 });
     expect(store.load().progress).toEqual(sample());
   });
 
-  it('reports a full storage and keeps the last saved progress', () => {
-    const kv = flakyKV();
-    const store = createStore(kv);
-    store.save(sample());
-    const full = createStore(
-      Object.assign(Object.create(kv), {
-        setItem: () => {
-          throw named('QuotaExceededError');
-        },
-      }) as KV,
-    );
-    const r = full.update((p) => {
-      p.srs['noun:new'] = { ...card };
+  it('full storage: reports it, keeps the session in memory, leaves stored data alone', () => {
+    const kv = memoryKV();
+    createStore(kv).save(sample());
+    const full: KV = {
+      getItem: (k) => kv.getItem(k),
+      setItem: () => {
+        throw named('QuotaExceededError');
+      },
+      removeItem: (k) => kv.removeItem(k),
+    };
+    const store = createStore(full);
+    const first = store.update((p) => {
+      p.srs['noun:a'] = { ...card };
     });
-    expect(r.ok).toBe(false);
-    expect(r).toMatchObject({ reason: 'quota' });
-    expect(Object.keys(full.load().progress.srs)).toEqual(['noun:tisch']);
+    expect(first).toMatchObject({ ok: false, reason: 'quota' });
+    expect(store.persistent).toBe(false);
+    store.update((p) => {
+      p.srs['noun:b'] = { ...card };
+    });
+    expect(Object.keys(store.load().progress.srs).sort()).toEqual([
+      'noun:a',
+      'noun:b',
+      'noun:tisch',
+    ]);
+    expect(createStore(kv).load().progress).toEqual(sample());
+  });
+
+  it('recognizes quota errors by legacy code, even if not an Error', () => {
+    for (const thrown of [{ code: 22 }, { code: 1014 }, { name: 'NS_ERROR_DOM_QUOTA_REACHED' }]) {
+      const store = createStore({
+        getItem: () => null,
+        setItem: () => {
+          throw thrown;
+        },
+        removeItem: () => undefined,
+      });
+      expect(store.save(sample()), JSON.stringify(thrown)).toEqual({ ok: false, reason: 'quota' });
+    }
   });
 
   it('falls back to memory when writing fails for another reason', () => {
@@ -242,7 +333,7 @@ describe('createStore', () => {
   it('reset deletes progress', () => {
     const store = createStore(memoryKV());
     store.save(sample());
-    expect(store.reset()).toEqual({ ok: true });
+    expect(store.reset()).toEqual({ ok: true, dropped: 0 });
     expect(store.load().status).toBe('empty');
   });
 
