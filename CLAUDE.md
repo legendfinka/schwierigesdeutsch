@@ -1,4 +1,7 @@
-# CLAUDE.md — SchwierigeDeutsch
+# CLAUDE.md — Schwieriges Deutsch
+
+Site name: **Schwieriges Deutsch** (two words; strong adjective ending -es, because
+*Deutsch* is neuter and has no article). Package/id form: `schwieriges-deutsch`.
 
 A free website for learning German: grammar explanations, quizzes, verb and noun
 trainers, graded texts and audio. The goal is to make German *structure* understandable,
@@ -53,7 +56,7 @@ src/
     texts/            # graded stories (Markdown + frontmatter)
     grammar/          # rule explanation pages (Markdown)
   components/         # UI components (QuizCard, GenderTag, SentenceView, ...)
-  layouts/            # BaseLayout.astro (planned)
+  layouts/            # BaseLayout.astro (header, nav, footer)
   lib/                # schemas.ts (Zod), content-checks.ts, german-text.ts (sentence
                       # helpers), visibility.ts (what ships), json-entries.ts +
                       # json-array-loader.ts (content loading);
@@ -94,6 +97,7 @@ Noun — always store article, plural and an example sentence:
   "gender": "m",
   "plural": "Tische",
   "level": "A1",
+  "topic": "home",
   "translation": { "en": "table" },
   "example": "Der Tisch steht in der Küche.",
   "genderRule": null,
@@ -120,9 +124,13 @@ Leave it out while an entry is unverified: it is then shown only in dev, with an
   `plural`; quizzes `answer` + `explanation`; sentences `roles` + `translation`. A verified
   entry missing one of these is hidden in production (a test catches this).
 - **The UI must not present an unchecked part as verified.** Use `isChecked(entry, part)`:
-  e.g. show an example sentence as normal only if `example` is checked, otherwise label it
-  (the placeholder page already badges unchecked translations).
+  e.g. show an example sentence as normal only if `example` is checked, otherwise mark it.
+  Use the quiet `.unverified` style (dotted underline + screen-reader text + one legend
+  line per page), not a badge on every item. Badges are for whole unreviewed entries (dev).
 - Schemas are strict: unknown fields (e.g. the old `needsReview`) fail validation.
+
+`topic` is required and groups nouns on the site; allowed ids and their labels are in
+`src/lib/topics.ts` (people, food, home, town, time, everyday). Add a topic there first.
 
 `gender` is `m`, `f` or `n`, or `pl` for plural-only nouns. Number rules (enforced by the
 schema):
@@ -277,9 +285,10 @@ Do these in order; each step ends with tests passing and something that works.
    example sentences start capitalized and end with . ! ?; quiz options don't mix
    articles with other types; `genderRule` must match `src/content/grammar/<id>.md`.~~
    Done.
-3. **Design system + layout.** Autumn palette and tokens in `global.css` (light + dark),
-   `BaseLayout.astro`, top nav, home page, `GenderTag` component. Replace the placeholder
-   page.
+3. ~~Design system + layout: autumn tokens in `global.css` (light + dark, contrast tested
+   in `tests/design-tokens.test.ts`), `BaseLayout.astro`, nav (only existing pages),
+   home page with section cards, `/nouns` card list, `GenderTag`, 404 page. Internal
+   links go through `url()` (`src/lib/url.ts`) so a sub-folder `base` works.~~ Done.
 4. **Storage.** `src/lib/storage.ts` as described in *Progress storage*, with tests
    (broken data, wrong version, storage unavailable).
 5. **Spaced repetition.** `src/lib/srs.ts` (SM-2 first), pure functions, with tests.
