@@ -1,0 +1,39 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { REPO_URL } from '../lib/site';
+
+// Written in one piece per paragraph, so no space around a link is lost.
+const issues = `${REPO_URL}/issues/new`;
+---
+
+<BaseLayout title="About" description="Why Schwieriges Deutsch exists and how the German is checked.">
+  <h1>About</h1>
+
+  <p class="lead">
+    Even when you know every word, German sentences can be hard to follow. You can't always tell who is doing what. I made this site to help with that.
+  </p>
+
+  <p>
+    It's free. There are no accounts, no ads and no tracking. Your progress stays in your own browser.
+  </p>
+
+  <h2>Can I trust it?</h2>
+  <p>
+    Before a noun goes on the site, I check its article and plural in at least two dictionaries. If they disagree, I show the most common form and leave a note. The English meanings and the example sentences are mine, and I haven't checked them word by word yet. Please treat them with a bit of care.
+  </p>
+  <p>
+    For checking I use <a href="https://www.duden.de/" rel="noopener noreferrer">Duden</a>, <a href="https://www.dwds.de/" rel="noopener noreferrer">DWDS</a>, <a href="https://de.wiktionary.org/" rel="noopener noreferrer">Wiktionary</a> and <a href="https://www.verbformen.com/" rel="noopener noreferrer">Verbformen</a>. I don't copy their text.
+  </p>
+
+  <h2>Found a mistake?</h2>
+  <p>
+    Please tell me. You can <a href={issues} rel="noopener noreferrer">open an issue on GitHub</a> or use “Report a mistake” on a practice card.
+  </p>
+</BaseLayout>
+
+<style>
+  h2 {
+    margin-top: var(--space-5);
+    margin-bottom: var(--space-2);
+  }
+</style>

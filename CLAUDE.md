@@ -136,7 +136,8 @@ Warm, autumn, cozy: like reading by a window in October. Calm, never flashy.
 - System fonts, soft corners, thin warm borders, lots of space, respect reduced motion.
 - Trainers: one card at a time, big buttons, then a short "why". Friendly, never harsh red.
 - Pages: home, `/nouns`, `/cases`, `/sentences`, `/stories`, `/grammar`. Nav shows only
-  pages that exist.
+  pages that exist. `/about` is linked from the footer, which credits "legendfinka" and the
+  repo. Keep personal details off the site.
 
 ## Progress
 

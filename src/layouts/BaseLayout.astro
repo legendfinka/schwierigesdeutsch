@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import { url } from '../lib/url';
 import { isCurrentPath } from '../lib/nav';
+import { REPO_URL } from '../lib/site';
 import Logo from '../components/Logo.astro';
 
 interface Props {
@@ -73,7 +74,13 @@ const isCurrent = (href: string) => isCurrentPath(href, Astro.url.pathname, url(
     </main>
 
     <footer class="site-footer">
-      <p>Free to use. No accounts, no ads, no tracking.</p>
+      <p>
+        Free to use. No accounts, no ads, no tracking.
+      </p>
+      <p class="site-footer__links">
+        Made by legendfinka · <a href={url('/about/')}>About</a> ·
+        <a href={REPO_URL} rel="noopener noreferrer">GitHub</a>
+      </p>
     </footer>
   </body>
 </html>
@@ -205,5 +212,15 @@ const isCurrent = (href: string) => isCurrentPath(href, Astro.url.pathname, url(
 
   .site-footer p {
     margin: 0;
+  }
+
+  .site-footer__links {
+    margin-top: var(--space-1) !important;
+  }
+
+  .site-footer a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
   }
 </style>
