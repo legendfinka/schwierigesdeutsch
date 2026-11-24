@@ -1,8 +1,13 @@
 import type { Loader } from 'astro/loaders';
 import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { collectEntries, type RawFile } from './json-entries';
+
+type WatchHandler = (event: string, changed: string) => void;
+/** One watcher handler per folder, so reloading the loader never stacks listeners. */
+const handlers = new Map<string, WatchHandler>();
 
 /**
  * Loads every `*.json` file in a folder. Each file holds one entry or an array
@@ -15,36 +20,46 @@ export function jsonDir(dir: string): Loader {
     load: async ({ store, parseData, logger, config, watcher }) => {
       const base = join(fileURLToPath(config.root), dir);
 
-      const sync = async () => {
-        store.clear();
-        if (!existsSync(base)) return;
-        const files = (await readdir(base)).filter((f) => f.endsWith('.json')).sort();
-        const seen = new Set<string>();
-        for (const file of files) {
-          const filePath = join(dir, file); // Astro wants paths relative to the root
-          const raw: unknown = JSON.parse(await readFile(join(base, file), 'utf8'));
-          const items = Array.isArray(raw) ? raw : [raw];
-          for (const item of items as Array<Record<string, unknown>>) {
-            const id = item.id;
-            if (typeof id !== 'string') throw new Error(`${dir}/${file}: entry without a string id`);
-            if (seen.has(id)) throw new Error(`${dir}/${file}: duplicate id "${id}"`);
-            seen.add(id);
-            const data = await parseData({ id, data: item, filePath });
-            store.set({ id, data, filePath });
+      const doSync = async () => {
+        const files: RawFile[] = [];
+        if (existsSync(base)) {
+          for (const file of (await readdir(base)).filter((f) => f.endsWith('.json')).sort()) {
+            const text = await readFile(join(base, file), 'utf8'); // I/O errors surface as they are
+            try {
+              files.push({ file, raw: JSON.parse(text) });
+            } catch (cause) {
+              throw new Error(`${dir}/${file}: invalid JSON`, { cause });
+            }
           }
+        }
+        const entries = collectEntries(dir, files);
+        store.clear();
+        for (const { id, item, file } of entries) {
+          const filePath = join(dir, file); // Astro wants paths relative to the root
+          const data = await parseData({ id, data: item, filePath });
+          store.set({ id, data, filePath });
         }
         if (files.length === 0) logger.info(`no files in ${dir}`);
       };
 
+      // Run syncs one after another so overlapping file events can't leave stale data.
+      let queue: Promise<void> = Promise.resolve();
+      const sync = () => (queue = queue.catch(() => undefined).then(doSync));
+
       await sync();
 
-      // Reload in `astro dev` when a JSON file in this folder changes.
-      watcher?.add(base);
-      watcher?.on('all', (_event, changed) => {
-        if (changed.startsWith(base) && changed.endsWith('.json')) {
-          sync().catch((e: unknown) => logger.error(String(e)));
-        }
-      });
+      if (watcher) {
+        const previous = handlers.get(dir);
+        if (previous) watcher.off('all', previous);
+        const handler: WatchHandler = (_event, changed) => {
+          if (changed.startsWith(base + sep) && changed.endsWith('.json')) {
+            sync().catch((e: unknown) => logger.error(String(e)));
+          }
+        };
+        handlers.set(dir, handler);
+        watcher.add(base);
+        watcher.on('all', handler);
+      }
     },
   };
 }
