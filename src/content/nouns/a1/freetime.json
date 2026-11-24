@@ -1,0 +1,5 @@
+[
+  {"id":"gitarre","noun":"Gitarre","gender":"f","plural":"Gitarren","level":"A1","topic":"freetime","translation":{"en":"guitar"},"example":"Die Gitarre ist alt.","genderRule":null,"verified":{"sources":["duden","dwds"],"checked":["gender","plural"],"date":"2026-11-24"}},
+  {"id":"klavier","noun":"Klavier","gender":"n","plural":"Klaviere","level":"A1","topic":"freetime","translation":{"en":"piano"},"example":"Das Klavier steht im Wohnzimmer.","genderRule":null,"verified":{"sources":["duden","dwds"],"checked":["gender","plural"],"date":"2026-11-24"}},
+  {"id":"lied","noun":"Lied","gender":"n","plural":"Lieder","level":"A1","topic":"freetime","translation":{"en":"song"},"example":"Das Lied ist schön.","genderRule":null,"verified":{"sources":["duden","dwds"],"checked":["gender","plural"],"date":"2026-11-24"}}
+]

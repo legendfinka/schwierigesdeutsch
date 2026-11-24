@@ -1,0 +1,7 @@
+[
+  {"id":"huhn","noun":"Huhn","gender":"n","plural":"Hühner","level":"A1","topic":"nature","translation":{"en":"chicken, hen"},"example":"Das Huhn legt ein Ei.","genderRule":null,"verified":{"sources":["duden","dwds"],"checked":["gender","plural"],"date":"2026-11-24"}},
+  {"id":"kuh","noun":"Kuh","gender":"f","plural":"Kühe","level":"A1","topic":"nature","translation":{"en":"cow"},"example":"Die Kuh steht auf dem Feld.","genderRule":null,"verified":{"sources":["duden","dwds"],"checked":["gender","plural"],"date":"2026-11-24"}},
+  {"id":"luft","noun":"Luft","gender":"f","plural":null,"singularOnly":true,"level":"A1","topic":"nature","translation":{"en":"air"},"example":"Die Luft ist frisch.","genderRule":null,"verified":{"sources":["duden","dwds"],"checked":["gender","plural"],"date":"2026-11-24","notes":"Duden: no plural in the main senses; 'Lüfte' is elevated or poetic. Not shown."}},
+  {"id":"maus","noun":"Maus","gender":"f","plural":"Mäuse","level":"A1","topic":"nature","translation":{"en":"mouse"},"example":"Die Maus ist klein.","genderRule":null,"verified":{"sources":["duden","dwds"],"checked":["gender","plural"],"date":"2026-11-24"}},
+  {"id":"schwein","noun":"Schwein","gender":"n","plural":"Schweine","level":"A1","topic":"nature","translation":{"en":"pig"},"example":"Das Schwein ist dick.","genderRule":null,"verified":{"sources":["duden","dwds"],"checked":["gender","plural"],"date":"2026-11-24"}}
+]

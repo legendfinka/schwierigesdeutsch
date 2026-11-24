@@ -1,0 +1,7 @@
+[
+  {"id":"brille","noun":"Brille","gender":"f","plural":"Brillen","level":"A1","topic":"clothes","translation":{"en":"glasses"},"example":"Die Brille liegt auf dem Tisch.","genderRule":null,"verified":{"sources":["duden","dwds"],"checked":["gender","plural"],"date":"2026-11-24","notes":"Singular in German, plural in English."}},
+  {"id":"kleidung","noun":"Kleidung","gender":"f","plural":null,"singularOnly":true,"level":"A1","topic":"clothes","translation":{"en":"clothes, clothing"},"example":"Die Kleidung ist nass.","genderRule":null,"verified":{"sources":["duden","dwds"],"checked":["gender","plural"],"date":"2026-11-24","notes":"Duden: plural 'Kleidungen' is rare. Not shown."}},
+  {"id":"regenschirm","noun":"Regenschirm","gender":"m","plural":"Regenschirme","level":"A1","topic":"clothes","translation":{"en":"umbrella"},"example":"Der Regenschirm ist nass.","genderRule":null,"verified":{"sources":["duden","dwds"],"checked":["gender","plural"],"date":"2026-11-24"}},
+  {"id":"ring","noun":"Ring","gender":"m","plural":"Ringe","level":"A1","topic":"clothes","translation":{"en":"ring"},"example":"Der Ring ist aus Gold.","genderRule":null,"verified":{"sources":["duden","dwds"],"checked":["gender","plural"],"date":"2026-11-24"}},
+  {"id":"rucksack","noun":"Rucksack","gender":"m","plural":"Rucksäcke","level":"A1","topic":"clothes","translation":{"en":"rucksack, backpack"},"example":"Der Rucksack ist schwer.","genderRule":null,"verified":{"sources":["duden","dwds"],"checked":["gender","plural"],"date":"2026-11-24"}}
+]
