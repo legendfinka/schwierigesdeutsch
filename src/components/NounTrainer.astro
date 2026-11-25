@@ -1,4 +1,5 @@
 ---
+import '../styles/trainer.css';
 import type { TrainerCard } from '../lib/noun-trainer';
 import { levelsOf } from '../lib/levels';
 import type { Topic } from '../lib/topics';
@@ -247,7 +248,11 @@ const json = JSON.stringify(cards).replace(/</g, '\\u003c');
       articleBox.hidden = true;
       pluralForm.hidden = true;
 
-      const verdict = make('p', result.correct ? 'Correct!' : 'Not quite.', 'trainer__verdict');
+      const verdict = make(
+        'p',
+        result.correct ? '✓ Correct!' : '✗ Not quite.',
+        `trainer__verdict ${result.correct ? 'is-right' : 'is-wrong'}`,
+      );
       verdict.tabIndex = -1;
 
       const answer = make('p', '', 'trainer__answer');
@@ -339,131 +344,3 @@ const json = JSON.stringify(cards).replace(/</g, '\\u003c');
 
   init();
 </script>
-
-<style is:global>
-  .trainer {
-    margin: 0 0 var(--space-5);
-  }
-
-  .trainer__topics ul {
-    list-style: none;
-    margin: 0 0 var(--space-4);
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-  }
-
-  .trainer__topics a {
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--tap);
-    padding: 0 var(--space-3);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    background: var(--surface);
-    color: var(--text);
-    text-decoration: none;
-  }
-
-  .trainer__topics a:hover {
-    border-color: var(--accent);
-  }
-
-  .trainer__topics a[aria-current='page'] {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    font-weight: 600;
-  }
-
-  .trainer__card .bar {
-    margin-bottom: var(--space-2);
-  }
-
-  .trainer__note {
-    border: 1px solid var(--border);
-    border-left: 5px solid var(--accent);
-    border-radius: var(--radius-sm);
-    background: var(--accent-soft);
-    padding: var(--space-3);
-  }
-
-  .trainer__card p {
-    margin: 0 0 var(--space-2);
-  }
-
-  .trainer__progress {
-    font-size: 0.9rem;
-  }
-
-  .trainer__question {
-    color: var(--text-muted);
-  }
-
-  .trainer__word {
-    font-family: var(--font-heading);
-    font-size: 2rem;
-    font-weight: 600;
-  }
-
-  .trainer__translation {
-    margin-bottom: var(--space-4) !important;
-  }
-
-  .trainer__choices {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin-top: var(--space-3);
-  }
-
-  .trainer__choices .btn {
-    flex: 1 1 5rem;
-  }
-
-  .trainer__row {
-    display: flex;
-    gap: var(--space-2);
-    margin-top: var(--space-2);
-  }
-
-  .trainer__row input {
-    flex: 1;
-    min-width: 0;
-    min-height: var(--tap);
-    padding: 0 var(--space-3);
-    font: inherit;
-    font-size: 1.1rem;
-    color: var(--text);
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-  }
-
-  .trainer__hint {
-    font-size: 0.85rem;
-    margin-top: var(--space-2) !important;
-  }
-
-  .trainer__verdict {
-    font-family: var(--font-heading);
-    font-size: 1.3rem;
-    font-weight: 600;
-  }
-
-  .trainer__answer {
-    font-size: 1.35rem;
-    font-weight: 600;
-  }
-
-  .trainer__report {
-    display: inline-block;
-    margin-bottom: var(--space-2);
-    font-size: 0.9rem;
-  }
-
-  .trainer__done {
-    font-size: 1.2rem;
-    font-weight: 600;
-  }
-</style>

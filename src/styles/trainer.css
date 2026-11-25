@@ -1,0 +1,219 @@
+/* Shared by the noun trainer and the quizzes. */
+.trainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-6);
+}
+
+.trainer > * {
+  margin: 0;
+}
+
+/* The rule box, above the quiz card. */
+.trainer > .trainer__details {
+  padding: var(--space-1) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.trainer__details ul {
+  margin: 0 0 var(--space-3);
+  padding-left: var(--space-5);
+}
+
+.trainer__details li + li {
+  margin-top: var(--space-2);
+}
+
+.trainer__topics ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.trainer__topics a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.trainer__topics a:hover {
+  border-color: var(--accent);
+}
+
+.trainer__topics a[aria-current='page'] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.trainer__card .bar {
+  margin-bottom: var(--space-3);
+}
+
+.trainer__note {
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  padding: var(--space-3);
+}
+
+.trainer__card p {
+  margin: 0 0 var(--space-3);
+}
+
+.trainer__progress {
+  font-size: 0.9rem;
+}
+
+.trainer__question {
+  color: var(--text-muted);
+}
+
+.trainer__word {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.trainer__translation {
+  margin-bottom: var(--space-4) !important;
+}
+
+.trainer__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.trainer__choices .btn {
+  flex: 1 1 5rem;
+}
+
+.trainer__row {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.trainer__row input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tap);
+  padding: 0 var(--space-3);
+  font: inherit;
+  font-size: 1.1rem;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.trainer__hint {
+  font-size: 0.85rem;
+  margin-top: var(--space-2) !important;
+}
+
+.trainer__reveal {
+  margin-top: var(--space-5);
+}
+
+.trainer__card .trainer__reveal > p {
+  margin-bottom: var(--space-4);
+}
+
+.trainer__reveal .trainer__choices {
+  margin-top: var(--space-5);
+}
+
+.trainer__verdict {
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+  font-weight: 600;
+  padding: var(--space-2) var(--space-3);
+  border-left: 5px solid;
+  border-radius: var(--radius-sm);
+}
+
+.is-right {
+  color: var(--right);
+  background: var(--right-soft);
+  border-color: var(--right);
+}
+
+.is-wrong {
+  color: var(--wrong);
+  background: var(--wrong-soft);
+  border-color: var(--wrong);
+}
+
+/* Answered options keep their result color, even on hover. */
+.trainer__choices .btn:disabled {
+  cursor: default;
+}
+
+.trainer__choices .btn.is-right,
+.trainer__choices .btn.is-wrong {
+  border-width: 2px;
+}
+
+.trainer__choices .btn.is-right {
+  background: var(--right-soft);
+  border-color: var(--right);
+}
+
+.trainer__choices .btn.is-wrong {
+  background: var(--wrong-soft);
+  border-color: var(--wrong);
+}
+
+.trainer__choices .btn:disabled:not(.is-right, .is-wrong) {
+  color: var(--text-muted);
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.trainer__answer {
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.trainer__report {
+  display: inline-block;
+  margin-bottom: var(--space-2);
+  font-size: 0.9rem;
+}
+
+.trainer__done {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* Quiz */
+.trainer__prompt {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 600;
+  padding: var(--space-3) 0 var(--space-1);
+}
+
+.trainer__details summary {
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--text-muted);
+}

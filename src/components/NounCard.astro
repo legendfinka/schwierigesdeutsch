@@ -28,6 +28,8 @@ const { noun: n } = Astro.props;
 <style>
   .noun-card {
     border-left-width: 5px;
+    /* Word lists are long, so these stay tighter. */
+    padding: var(--space-4);
   }
 
   .noun-card--m { border-left-color: var(--gender-m); }

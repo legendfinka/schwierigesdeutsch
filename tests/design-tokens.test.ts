@@ -60,6 +60,15 @@ describe.each([
     expect(fails).toEqual([]);
   });
 
+  it('answer colors reach AA on their own tint and on cards', () => {
+    for (const name of ['right', 'wrong']) {
+      for (const bg of [`${name}-soft`, 'surface']) {
+        expect(contrast(t[name]!, t[bg]!), `--${name} on --${bg}`).toBeGreaterThanOrEqual(4.5);
+      }
+      expect(contrast(t.text!, t[`${name}-soft`]!), `--text on --${name}-soft`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   it('focus ring reaches 3:1 on backgrounds (non-text contrast)', () => {
     for (const bg of BACKGROUNDS) {
       expect(contrast(t.focus!, t[bg]!), `--focus on --${bg}`).toBeGreaterThanOrEqual(3);
