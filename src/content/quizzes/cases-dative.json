@@ -1,0 +1,22 @@
+[
+  { "id": "dative-001", "topic": "cases/dative", "level": "A2", "prompt": "Ich gebe ___ Kind einen Ball.", "options": ["das", "dem", "den"], "answer": "dem",
+    "explanation": { "en": "The child receives the ball, so it is dative. Neuter: das → dem." }, "hint": { "en": "Who receives the ball?" } },
+  { "id": "dative-002", "topic": "cases/dative", "level": "A2", "prompt": "Er hilft ___ Frau.", "options": ["die", "der", "den"], "answer": "der",
+    "explanation": { "en": "'helfen' takes the dative. Feminine: die → der." }, "hint": { "en": "Which case does 'helfen' take?" },
+    "verified": { "sources": ["wiktionary", "dwds"], "checked": ["answer", "explanation"], "date": "2026-11-25", "notes": "Sources confirm the verb takes the dative, not this sentence or the article table." } },
+  { "id": "dative-003", "topic": "cases/dative", "level": "A2", "prompt": "Ich danke ___ Lehrer.", "options": ["der", "den", "dem"], "answer": "dem",
+    "explanation": { "en": "'danken' takes the dative. Masculine: der → dem." }, "hint": { "en": "Which case does 'danken' take?" },
+    "verified": { "sources": ["wiktionary", "dwds"], "checked": ["answer", "explanation"], "date": "2026-11-25", "notes": "Sources confirm the verb takes the dative, not this sentence or the article table." } },
+  { "id": "dative-004", "topic": "cases/dative", "level": "A2", "prompt": "Sie schenkt ___ Mutter eine Blume.", "options": ["die", "der", "dem"], "answer": "der",
+    "explanation": { "en": "The mother receives the flower, so it is dative. Feminine: die → der." }, "hint": { "en": "Who gets the flower?" } },
+  { "id": "dative-005", "topic": "cases/dative", "level": "A2", "prompt": "Ich schreibe ___ Freund einen Brief.", "options": ["der", "den", "dem"], "answer": "dem",
+    "explanation": { "en": "The friend receives the letter, so it is dative. Masculine: der → dem." }, "hint": { "en": "Who gets the letter?" } },
+  { "id": "dative-006", "topic": "cases/dative", "level": "A2", "prompt": "Das Buch gehört ___ Mann.", "options": ["der", "den", "dem"], "answer": "dem",
+    "explanation": { "en": "With 'gehören' (belong to), the owner is dative. Masculine: der → dem." }, "hint": { "en": "Who does it belong to?" },
+    "verified": { "sources": ["wiktionary", "dwds"], "checked": ["answer", "explanation"], "date": "2026-11-25", "notes": "Sources confirm the verb takes the dative, not this sentence or the article table." } },
+  { "id": "dative-007", "topic": "cases/dative", "level": "A2", "prompt": "Wir helfen ___ Kindern.", "options": ["die", "den", "dem"], "answer": "den",
+    "explanation": { "en": "'helfen' takes the dative. In the dative plural die → den, and the noun adds -n: Kindern." }, "hint": { "en": "Kindern is plural." },
+    "verified": { "sources": ["wiktionary", "dwds"], "checked": ["answer", "explanation"], "date": "2026-11-25", "notes": "Sources confirm the verb takes the dative, not this sentence or the article table." } },
+  { "id": "dative-008", "topic": "cases/dative", "level": "A2", "prompt": "Er zeigt ___ Gast das Zimmer.", "options": ["der", "den", "dem"], "answer": "dem",
+    "explanation": { "en": "The guest is the one being shown the room, so dative. Masculine: der → dem." }, "hint": { "en": "Who is shown the room?" } }
+]

@@ -1,0 +1,247 @@
+---
+import '../styles/trainer.css';
+import { CASE_TOPICS } from '../lib/case-topics';
+import type { QuizCard } from '../lib/quiz';
+import { url } from '../lib/url';
+
+interface Props {
+  cards: QuizCard[];
+}
+
+const { cards } = Astro.props;
+const here = url('/cases/practice/');
+const chips = [
+  { id: '', label: 'All topics', href: here },
+  ...CASE_TOPICS.map((t) => ({ id: t.id, label: t.label, href: `${here}?topic=${t.id}` })),
+];
+// "<" is escaped so the data can never close the script tag.
+const json = JSON.stringify(cards).replace(/</g, '\\u003c');
+---
+
+<section id="quiz" class="trainer" aria-label="Quiz" hidden>
+  <nav class="trainer__topics" aria-label="Choose a topic">
+    <ul>
+      {
+        chips.map((c) => (
+          <li>
+            <a href={c.href} data-topic={c.id}>
+              {c.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  {
+    CASE_TOPICS.map((t) => (
+      <details class="trainer__details" data-rules={t.id} hidden>
+        <summary>Show the rule</summary>
+        <ul>
+          {t.rules.map((r) => (
+            <li>{r}</li>
+          ))}
+        </ul>
+      </details>
+    ))
+  }
+
+  <p id="q-note" class="trainer__note" role="status" hidden></p>
+
+  <div id="q-card" class="card trainer__card" hidden>
+    <div class="bar" aria-hidden="true"><span id="q-bar" class="bar__fill"></span></div>
+    <p id="q-progress" class="trainer__progress muted"></p>
+    <p id="q-prompt" class="trainer__prompt" lang="de"></p>
+    <details id="q-hint" class="trainer__details">
+      <summary>Hint</summary>
+      <p id="q-hint-text"></p>
+    </details>
+    <div id="q-options" class="trainer__choices" role="group" aria-label="Choose the answer"></div>
+    <div id="q-reveal" class="trainer__reveal" aria-live="polite" hidden></div>
+  </div>
+
+  <div id="q-done" class="card trainer__card" hidden>
+    <p id="q-done-text" class="trainer__done" tabindex="-1"></p>
+    <button id="q-more" type="button" class="btn btn--primary">Another round</button>
+  </div>
+
+  <script id="quiz-data" type="application/json" set:html={json} />
+</section>
+
+<script>
+  import { createStore } from '../lib/storage';
+  import { reportUrl } from '../lib/site';
+  import { advance, currentEntry, newSession, sessionProgress, type Entry, type Session } from '../lib/session';
+  import {
+    caseTopicFromQuery,
+    filledPrompt,
+    pickQuestions,
+    questionsFor,
+    recordResult,
+    shuffle,
+    type QuizCard,
+  } from '../lib/quiz';
+
+  const byId = <T extends HTMLElement>(id: string): T => {
+    const e = document.getElementById(id);
+    if (!e) throw new Error(`missing #${id}`);
+    return e as T;
+  };
+
+  function make(tag: string, text = '', cls = ''): HTMLElement {
+    const e = document.createElement(tag);
+    e.textContent = text;
+    if (cls) e.className = cls;
+    return e;
+  }
+
+  function init() {
+    const root = byId('quiz');
+    const all: QuizCard[] = JSON.parse(byId('quiz-data').textContent ?? '[]');
+    const picked = questionsFor(all, caseTopicFromQuery(location.search));
+    if (picked.cards.length === 0) return;
+    for (const a of root.querySelectorAll<HTMLAnchorElement>('a[data-topic]')) {
+      if (a.dataset.topic === (picked.topic ?? '')) a.setAttribute('aria-current', 'page');
+    }
+    const rules = root.querySelector<HTMLElement>(`[data-rules="${picked.topic ?? ''}"]`);
+    if (rules) rules.hidden = false;
+
+    const byCard = new Map(picked.cards.map((c) => [c.id, c]));
+    const ids = picked.cards.map((c) => c.id);
+    const store = createStore();
+    const note = byId('q-note');
+    const cardBox = byId('q-card');
+    const doneBox = byId('q-done');
+    const options = byId('q-options');
+    const reveal = byId('q-reveal');
+    const hint = byId<HTMLDetailsElement>('q-hint');
+
+    let session: Session = newSession([]);
+    let current: { entry: Entry; card: QuizCard } | null = null;
+    let saveFailed = false;
+
+    function updateNote() {
+      const text = store.outdated
+        ? 'Your saved progress is from a newer version of this site. It is left untouched, and this round is not saved.'
+        : !store.persistent || saveFailed
+          ? "Progress won't be saved: your browser blocks or has filled its storage."
+          : '';
+      note.textContent = text;
+      note.hidden = text === '';
+    }
+
+    function begin() {
+      const { progress } = store.load();
+      session = newSession(pickQuestions(ids, progress.quiz));
+      updateNote();
+      render();
+    }
+
+    function render() {
+      const entry = currentEntry(session);
+      if (!entry) return showDone();
+      const card = byCard.get(entry.id)!;
+      current = { entry, card };
+      doneBox.hidden = true;
+      cardBox.hidden = false;
+      reveal.hidden = true;
+      reveal.replaceChildren();
+
+      const { done, total } = sessionProgress(session);
+      byId('q-bar').style.width = `${Math.round((done / total) * 100)}%`;
+      const place = entry.retry ? 'Once more (not counted)' : `Question ${done + 1} of ${total}`;
+      byId('q-progress').textContent = card.reviewed ? place : `${place} · unreviewed`;
+      byId('q-prompt').textContent = card.prompt;
+      hint.open = false;
+      hint.hidden = card.hint === null;
+      byId('q-hint-text').textContent = card.hint ?? '';
+
+      options.hidden = false;
+      options.replaceChildren(
+        ...shuffle(card.options).map((o) => {
+          const b = make('button', o, 'btn') as HTMLButtonElement;
+          b.type = 'button';
+          b.lang = 'de';
+          b.addEventListener('click', () => answer(o));
+          return b;
+        }),
+      );
+      options.querySelector<HTMLButtonElement>('button')?.focus();
+    }
+
+    function answer(chosen: string) {
+      if (!current) return;
+      const { entry, card } = current;
+      current = null;
+      const correct = chosen === card.answer;
+
+      if (!entry.retry) {
+        const saved = store.update((p) => {
+          p.quiz[card.id] = recordResult(p.quiz[card.id], correct, Date.now());
+        });
+        saveFailed = !saved.ok && saved.reason !== 'newer-version';
+        updateNote();
+      }
+
+      // Options stay visible, marked with a symbol too, not color alone.
+      for (const b of options.querySelectorAll<HTMLButtonElement>('button')) {
+        const value = b.textContent ?? '';
+        b.disabled = true;
+        if (value === card.answer) {
+          b.classList.add('is-right');
+          b.textContent = `✓ ${value}`;
+        } else if (value === chosen) {
+          b.classList.add('is-wrong');
+          b.textContent = `✗ ${value}`;
+        }
+      }
+      hint.hidden = true;
+
+      const verdict = make(
+        'p',
+        correct ? '✓ Correct!' : '✗ Not quite.',
+        `trainer__verdict ${correct ? 'is-right' : 'is-wrong'}`,
+      );
+      verdict.tabIndex = -1;
+      const sentence = make('p', filledPrompt(card), 'trainer__answer');
+      sentence.lang = 'de';
+
+      const lines: HTMLElement[] = [];
+      if (!correct) lines.push(make('p', `You chose “${chosen}”.`, 'muted'));
+      lines.push(make('p', card.explanation));
+
+      const report = make('a', 'Report a mistake', 'trainer__report') as HTMLAnchorElement;
+      report.href = reportUrl(card.prompt, card.id, undefined, 'quiz');
+      report.target = '_blank';
+      report.rel = 'noopener noreferrer';
+
+      const next = make('button', 'Next', 'btn btn--primary') as HTMLButtonElement;
+      next.type = 'button';
+      next.addEventListener('click', () => {
+        session = advance(session, correct);
+        render();
+      });
+      const row = make('div', '', 'trainer__choices');
+      row.append(next);
+
+      reveal.replaceChildren(verdict, sentence, ...lines, report, row);
+      reveal.hidden = false;
+      verdict.focus();
+    }
+
+    function showDone() {
+      current = null;
+      cardBox.hidden = true;
+      doneBox.hidden = false;
+      byId('q-done-text').textContent =
+        `Done. ${session.firstTry} of ${session.total} right on the first try.`;
+      byId('q-done-text').focus();
+    }
+
+    byId('q-more').addEventListener('click', begin);
+    root.hidden = false;
+    begin();
+  }
+
+  init();
+</script>

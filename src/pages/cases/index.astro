@@ -1,0 +1,91 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { CASE_TOPICS, quizTopic } from '../../lib/case-topics';
+import { visibleQuizzes } from '../../lib/load-quizzes';
+import { url } from '../../lib/url';
+
+const quizzes = await visibleQuizzes();
+const topics = CASE_TOPICS.map((t) => ({
+  ...t,
+  ids: quizzes.filter((q) => q.topic === quizTopic(t.id)).map((q) => q.id),
+})).filter((t) => t.ids.length > 0);
+---
+
+<BaseLayout title="Cases" description="Short German case quizzes with the rules explained.">
+  <h1>Cases</h1>
+  <p class="lead">
+    The article changes with the noun's job in the sentence. Read the rule, then try the
+    questions.
+  </p>
+  <p><a class="btn btn--primary all" href={url('/cases/practice/')}>Practice all topics</a></p>
+
+  <ul class="topics">
+    {
+      topics.map((t) => (
+        <li class="card">
+          <h2>{t.label}</h2>
+          <p class="muted">{t.blurb}</p>
+          <ul class="rules">
+            {t.rules.map((r) => (
+              <li>{r}</li>
+            ))}
+          </ul>
+          <p class="muted stats" data-quiz-stats data-ids={t.ids.join(' ')} hidden />
+          <a class="btn practice" href={url(`/cases/practice/?topic=${t.id}`)}>
+            Practice {t.ids.length} questions
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</BaseLayout>
+
+<script>
+  import { createStore } from '../../lib/storage';
+  import { quizStats, quizStatsText } from '../../lib/quiz';
+
+  const { progress } = createStore().load();
+  for (const el of document.querySelectorAll<HTMLElement>('[data-quiz-stats]')) {
+    const ids = (el.dataset.ids ?? '').split(' ').filter(Boolean);
+    el.textContent = quizStatsText(quizStats(ids, progress.quiz));
+    el.hidden = false;
+  }
+</script>
+
+<style>
+  .all {
+    margin-bottom: var(--space-3);
+  }
+
+  .topics {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .topics h2 {
+    font-size: 1.25rem;
+    margin-bottom: var(--space-1);
+  }
+
+  .topics p {
+    margin-bottom: var(--space-3);
+  }
+
+  .rules {
+    margin: 0 0 var(--space-4);
+    padding: var(--space-3) var(--space-4) var(--space-3) var(--space-6);
+    border-radius: var(--radius-sm);
+    background: var(--surface-sunk);
+  }
+
+  .rules li + li {
+    margin-top: var(--space-2);
+  }
+
+  .stats {
+    font-size: 0.9rem;
+  }
+</style>

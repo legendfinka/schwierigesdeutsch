@@ -1,0 +1,23 @@
+[
+  { "id": "nom-acc-001", "topic": "cases/nom-acc", "level": "A1", "prompt": "___ Mann liest ein Buch.", "options": ["Der", "Den", "Dem"], "answer": "Der",
+    "explanation": { "en": "The man does the reading, so he is the subject. The subject is nominative: der Mann." }, "hint": { "en": "Who is reading?" } },
+  { "id": "nom-acc-002", "topic": "cases/nom-acc", "level": "A1", "prompt": "Ich sehe ___ Mann.", "options": ["der", "den", "dem"], "answer": "den",
+    "explanation": { "en": "The man is what I see: the direct object, so accusative. Masculine changes: der → den." }, "hint": { "en": "What do I see?" },
+    "verified": { "sources": ["wiktionary", "dwds"], "checked": ["answer", "explanation"], "date": "2026-11-25", "notes": "Sources confirm that the direct object is accusative, not this sentence or the article table." } },
+  { "id": "nom-acc-003", "topic": "cases/nom-acc", "level": "A1", "prompt": "Ich habe ___ Bruder.", "options": ["ein", "einen", "einem"], "answer": "einen",
+    "explanation": { "en": "'Bruder' is the direct object of 'haben', so accusative. Masculine: ein → einen." }, "hint": { "en": "Bruder is masculine." },
+    "verified": { "sources": ["wiktionary", "dwds"], "checked": ["answer", "explanation"], "date": "2026-11-25", "notes": "Sources confirm that the direct object is accusative, not this sentence or the article table." } },
+  { "id": "nom-acc-004", "topic": "cases/nom-acc", "level": "A1", "prompt": "Das ist ___ Tisch.", "options": ["ein", "einen", "einem"], "answer": "ein",
+    "explanation": { "en": "After 'sein' the noun stays nominative: ein Tisch." }, "hint": { "en": "Look at the verb: ist." } },
+  { "id": "nom-acc-005", "topic": "cases/nom-acc", "level": "A1", "prompt": "Er kauft ___ Apfel.", "options": ["ein", "einen", "einem"], "answer": "einen",
+    "explanation": { "en": "The apple is what he buys: direct object, accusative. Masculine: ein → einen." }, "hint": { "en": "What does he buy?" },
+    "verified": { "sources": ["wiktionary", "dwds"], "checked": ["answer", "explanation"], "date": "2026-11-25", "notes": "Sources confirm that the direct object is accusative, not this sentence or the article table." } },
+  { "id": "nom-acc-006", "topic": "cases/nom-acc", "level": "A1", "prompt": "Sie trinkt ___ Milch.", "options": ["die", "der", "den"], "answer": "die",
+    "explanation": { "en": "The milk is the direct object, so accusative. Feminine 'die' does not change." }, "hint": { "en": "Milch is feminine." },
+    "verified": { "sources": ["wiktionary", "dwds"], "checked": ["answer", "explanation"], "date": "2026-11-25", "notes": "Sources confirm that the direct object is accusative, not this sentence or the article table." } },
+  { "id": "nom-acc-007", "topic": "cases/nom-acc", "level": "A1", "prompt": "___ Kind spielt im Garten.", "options": ["Das", "Dem", "Den"], "answer": "Das",
+    "explanation": { "en": "The child is the one playing, so it is the subject: nominative, das Kind." }, "hint": { "en": "Who is playing?" } },
+  { "id": "nom-acc-008", "topic": "cases/nom-acc", "level": "A1", "prompt": "Wir brauchen ___ Auto.", "options": ["ein", "einen", "einem"], "answer": "ein",
+    "explanation": { "en": "The car is the direct object, so accusative. Neuter 'ein' does not change." }, "hint": { "en": "Auto is neuter." },
+    "verified": { "sources": ["wiktionary", "dwds"], "checked": ["answer", "explanation"], "date": "2026-11-25", "notes": "Sources confirm that the direct object is accusative, not this sentence or the article table." } }
+]

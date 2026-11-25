@@ -10,6 +10,7 @@ import {
   type QuizQuestion,
 } from '../src/lib/schemas';
 import { REQUIRED_CHECKS, isVisible } from '../src/lib/visibility';
+import { CASE_TOPIC_IDS, quizTopic } from '../src/lib/case-topics';
 import {
   checkCapitalized,
   checkExampleArticle,
@@ -159,6 +160,18 @@ describe('content/nouns extras', () => {
 
 describe('content/quizzes extras', () => {
   const quizzes = parsed<QuizQuestion>('quizzes', QuizQuestionSchema);
+
+  it('every question belongs to a known case topic', () => {
+    const known = new Set<string>(CASE_TOPIC_IDS.map(quizTopic));
+    expect(quizzes.filter(({ item }) => !known.has(item.topic)).map(({ item }) => item.id)).toEqual([]);
+  });
+
+  it('a verified question has all required checks, so none is silently hidden', () => {
+    const hidden = quizzes
+      .filter(({ item }) => item.verified !== undefined)
+      .filter(({ item }) => !isVisible(item, false, REQUIRED_CHECKS.quiz));
+    expect(hidden.map(({ item }) => item.id)).toEqual([]);
+  });
 
   it('options are all the same type', () => {
     const bad = quizzes.flatMap(({ file, item }) =>

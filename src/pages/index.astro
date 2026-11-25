@@ -21,7 +21,11 @@ const sections = [
     href: url('/nouns/'),
     text: `${nouns.length} nouns from ${range}. Practice the article and the plural.`,
   },
-  { title: 'Cases', text: 'Why the article changes: nominative, accusative, dative, genitive.' },
+  {
+    title: 'Cases',
+    href: url('/cases/'),
+    text: 'Why the article changes. Short rules and quizzes.',
+  },
   { title: 'Sentences', text: 'Tap a sentence to see its verb, subject and objects.' },
   { title: 'Stories', text: 'Short A1 and A2 stories to read and listen to.' },
   { title: 'Grammar', text: 'Short rules in plain English.' },
@@ -85,7 +89,7 @@ const sections = [
 <style>
   .home {
     display: grid;
-    gap: var(--space-5);
+    gap: var(--space-6);
   }
 
   .hero {
@@ -112,12 +116,6 @@ const sections = [
     flex-wrap: wrap;
     gap: var(--space-2);
     margin-bottom: var(--space-5);
-  }
-
-  .hero__buttons .btn {
-    display: inline-flex;
-    align-items: center;
-    text-decoration: none;
   }
 
   .hero__colors {
@@ -157,13 +155,13 @@ const sections = [
     margin: 0;
     padding: 0;
     display: grid;
-    gap: var(--space-3);
+    gap: var(--space-4);
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
   }
 
   .section-card {
     height: 100%;
-    padding: var(--space-3) var(--space-4);
+    padding: var(--space-4);
   }
 
   .section-card h3 {

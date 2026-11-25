@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import QuizTrainer from '../../components/QuizTrainer.astro';
+import { visibleQuizzes } from '../../lib/load-quizzes';
+import { toQuizCard } from '../../lib/quiz';
+import { url } from '../../lib/url';
+
+const cards = (await visibleQuizzes()).map(toQuizCard);
+---
+
+<BaseLayout title="Practice · Cases" description="Practice German cases.">
+  <h1>Case practice</h1>
+  <p><a href={url('/cases/')}>← All rules</a></p>
+
+  <noscript>
+    <p class="card">
+      The quiz needs JavaScript. You can still <a href={url('/cases/')}>read the rules</a>.
+    </p>
+  </noscript>
+
+  <QuizTrainer cards={cards} />
+</BaseLayout>

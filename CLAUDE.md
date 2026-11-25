@@ -158,8 +158,10 @@ only when a topic has 2+ levels).
 
 6. **Content growth**: A1 nouns to a few hundred, then A2. About 50 per topic file, checked
    in batches (see Adding content). Quizzes and sentences grow with steps 8 and 10.
-7. **Answer checking**: grow `src/lib/grading.ts` (plural check exists) for quiz answers.
-8. **Case quizzes** on `/cases`.
+Steps 7–8 done: case quizzes on `/cases` (`quiz.ts`, `case-topics.ts` holds topics and their
+rule text, `QuizTrainer.astro`; multiple choice, so no extra grading). Rounds share
+`session.ts`. Quiz `verified` means the sources confirm the rule, not the exact sentence.
+TODO(verify): receiver = dative, `sein` + nominative, subject = nominative, article table.
 9. **Grammar pages** on `/grammar`, linked from explanations and `genderRule`.
 10. **Sentence breakdown** on `/sentences`.
 11. **Sentence builder**, with a tap/keyboard option besides dragging.
