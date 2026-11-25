@@ -7,6 +7,7 @@ import type { SrsState } from './storage';
 import { TOPIC_IDS, type TopicId } from './topics';
 import { LEVELS } from './schemas';
 import { levelsOf, type Level } from './levels';
+import { newSession, type Session } from './session';
 
 export const ARTICLES = ['der', 'die', 'das'] as const;
 export type Article = (typeof ARTICLES)[number];
@@ -69,17 +70,7 @@ export function finalGrade(result: Result, rating: Rating): Grade {
   return result.correct ? rating : 'wrong';
 }
 
-// A card answered wrong comes back once more at the end, without touching the SRS again.
-export interface Entry {
-  id: string;
-  retry: boolean;
-}
-
-export interface Session {
-  queue: readonly Entry[];
-  total: number;
-  firstTry: number; // right on the first try
-}
+export { advance, currentEntry, sessionProgress, type Entry, type Session } from './session';
 
 export function startSession(
   ids: readonly string[],
@@ -87,16 +78,7 @@ export function startSession(
   now: number,
   newLimit: number = NEW_PER_SESSION,
 ): Session {
-  const queue = nextItems(ids, srs, now, newLimit).map((id) => ({ id, retry: false }));
-  return { queue, total: queue.length, firstTry: 0 };
-}
-
-export const currentEntry = (s: Session): Entry | undefined => s.queue[0];
-
-// Retries don't count, so the bar never goes backwards.
-export function sessionProgress(s: Session): { done: number; total: number } {
-  const left = s.queue.filter((e) => !e.retry).length;
-  return { done: s.total - left, total: s.total };
+  return newSession(nextItems(ids, srs, now, newLimit));
 }
 
 // Only known values pass, anything else means "all".
@@ -124,17 +106,6 @@ export function pickCards(all: readonly TrainerCard[], topic: TopicId | null, le
   return inLevel.length > 0
     ? { cards: inLevel, topic: shownTopic, level, levels: levelsOf(base) }
     : { cards: base, topic: shownTopic, level: null, levels: levelsOf(base) };
-}
-
-export function advance(s: Session, wasCorrect: boolean): Session {
-  const [head, ...rest] = s.queue;
-  if (!head) return s;
-  const again = !wasCorrect && !head.retry ? [{ id: head.id, retry: true }] : [];
-  return {
-    queue: [...rest, ...again],
-    total: s.total,
-    firstTry: s.firstTry + (wasCorrect && !head.retry ? 1 : 0),
-  };
 }
 
 // Time until the next reviewed card is due, or null if none is waiting.
